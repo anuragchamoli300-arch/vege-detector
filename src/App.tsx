@@ -5,13 +5,31 @@ import { DiagnosticResult as DiagnosticResultComponent } from "./components/Diag
 import { TrackerView } from "./components/TrackerView";
 import { EncyclopediaView } from "./components/EncyclopediaView";
 import { AgronomistChatModal } from "./components/AgronomistChatModal";
-import { DiagnosticResult, TrackedScan, TrackingState } from "./types";
+import { AuthView } from "./components/AuthView";
+import { AdminPortalView } from "./components/AdminPortalView";
+import { DiagnosticResult, TrackedScan, TrackingState, UserProfile } from "./types";
 import { INITIAL_TRACKED_SCANS } from "./data/initialData";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>("scanner");
   
+  // User Authentication State
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    try {
+      const savedUser = localStorage.getItem("cropvision_user");
+      if (savedUser) {
+        return JSON.parse(savedUser);
+      }
+    } catch (e) {
+      console.error("Failed to load user session:", e);
+    }
+    return null;
+  });
+
+  // Explicit flag if user clicked "Switch Account" or "Sign In" from navbar
+  const [showAuthScreen, setShowAuthScreen] = useState(false);
+
   // Scans history state persisted in localStorage
   const [trackedScans, setTrackedScans] = useState<TrackedScan[]>(() => {
     try {
@@ -56,6 +74,34 @@ export default function App() {
     }
   }, [trackedScans]);
 
+  // Handle Login / Sign up completion
+  const handleLoginSuccess = (newUser: UserProfile) => {
+    setUser(newUser);
+    setShowAuthScreen(false);
+    try {
+      localStorage.setItem("cropvision_user", JSON.stringify(newUser));
+    } catch (e) {
+      console.error("Failed to save user session:", e);
+    }
+    if (newUser.isAdmin || newUser.role === "Administrator") {
+      setActiveTab("admin");
+      showToast(`Welcome Administrator ${newUser.name}!`, "success");
+    } else {
+      showToast(`Welcome to CropVision, ${newUser.name}!`, "success");
+    }
+  };
+
+  // Handle Sign Out
+  const handleSignOut = () => {
+    setUser(null);
+    try {
+      localStorage.removeItem("cropvision_user");
+    } catch (e) {
+      console.error("Failed to clear user session:", e);
+    }
+    showToast("You have been signed out.", "info");
+  };
+
   // Handle new diagnosis from scanner
   const handleDiagnosisComplete = (
     diagnosis: DiagnosticResult,
@@ -87,7 +133,7 @@ export default function App() {
       severityLevel: diagnosis.severityLevel,
       trackingState: diagnosis.healthStatus === "HEALTHY" ? "Resolved" : "Investigating",
       userNotes: notes || "",
-      batchOrLocation: "Scanned Specimen",
+      batchOrLocation: user?.role === "Organic Farmer" ? "Field Block 1" : "Garden Patch",
       diagnosis,
     };
 
@@ -147,8 +193,8 @@ export default function App() {
   // Ask Agronomist from Encyclopedia
   const handleAskAgronomistAboutDisease = (diseaseName: string) => {
     setChatDiagnosisContext({
-      vegetableName: "Crop Specimen",
-      scientificName: "Plant Disease",
+      vegetableName: "Vegetable Sample",
+      scientificName: "Plant Condition",
       plantPart: "Foliage / Bulb",
       healthStatus: "MODERATE_DISEASE",
       primaryIssue: diseaseName,
@@ -182,14 +228,17 @@ export default function App() {
     setActiveTab("scanner");
   };
 
+  // Determine if authentication screen should be presented at start
+  const isAuthScreenVisible = (!user || showAuthScreen) && activeTab !== "admin";
+
   return (
-    <div className="min-h-screen bg-[#0F1410] text-slate-300 flex flex-col font-mono selection:bg-green-500 selection:text-black">
+    <div className="min-h-screen bg-[#0d130e] text-slate-200 flex flex-col selection:bg-emerald-500 selection:text-white">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 right-6 z-50 animate-bounce">
-          <div className="bg-[#151D16] border border-green-500/60 shadow-2xl px-4 py-2.5 flex items-center gap-2.5 text-xs text-slate-200">
-            <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
-            <span className="font-semibold tracking-wider uppercase">{toastMessage.title}</span>
+          <div className="bg-[#141d16] border border-emerald-500/50 shadow-2xl rounded-xl px-4 py-2.5 flex items-center gap-2.5 text-xs sm:text-sm text-slate-100">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-semibold">{toastMessage.title}</span>
           </div>
         </div>
       )}
@@ -197,52 +246,90 @@ export default function App() {
       {/* Main Header / Navigation */}
       <Navbar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => {
+          setShowAuthScreen(false);
+          setActiveTab(tab);
+        }}
         trackedCount={trackedScans.length}
         onOpenNewScan={handleStartNewScan}
+        user={user}
+        onSignOut={handleSignOut}
+        onOpenAuth={() => {
+          setShowAuthScreen(true);
+          setActiveTab("scanner");
+        }}
+        onOpenAdmin={() => {
+          setShowAuthScreen(false);
+          setActiveTab("admin");
+        }}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {activeTab === "scanner" && (
-          <div>
-            {currentDiagnosis ? (
-              <DiagnosticResultComponent
-                diagnosis={currentDiagnosis.diagnosis}
-                imagePreview={currentDiagnosis.imagePreview}
-                userNotes={currentDiagnosis.notes}
-                onSaveToTracker={handleSaveToTracker}
-                isSaved={currentDiagnosis.isSaved}
-                onAskAgronomist={handleAskAgronomist}
-                onScanNew={handleStartNewScan}
-              />
-            ) : (
-              <ScannerView onDiagnosisComplete={handleDiagnosisComplete} />
+        {activeTab === "admin" ? (
+          <AdminPortalView
+            currentUser={user}
+            onExitAdmin={() => setActiveTab("scanner")}
+          />
+        ) : isAuthScreenVisible ? (
+          <AuthView
+            onLoginSuccess={handleLoginSuccess}
+            onOpenAdminPortal={() => {
+              setShowAuthScreen(false);
+              setActiveTab("admin");
+            }}
+          />
+        ) : (
+          <>
+            {activeTab === "scanner" && (
+              <div>
+                {currentDiagnosis ? (
+                  <DiagnosticResultComponent
+                    diagnosis={currentDiagnosis.diagnosis}
+                    imagePreview={currentDiagnosis.imagePreview}
+                    userNotes={currentDiagnosis.notes}
+                    onSaveToTracker={handleSaveToTracker}
+                    isSaved={currentDiagnosis.isSaved}
+                    onAskAgronomist={handleAskAgronomist}
+                    onScanNew={handleStartNewScan}
+                  />
+                ) : (
+                  <ScannerView onDiagnosisComplete={handleDiagnosisComplete} />
+                )}
+              </div>
             )}
-          </div>
-        )}
 
-        {activeTab === "tracker" && (
-          <TrackerView
-            scans={trackedScans}
-            onUpdateScanState={handleUpdateScanState}
-            onDeleteScan={handleDeleteScan}
-            onViewScanDetail={handleViewScanDetail}
-            onStartNewScan={handleStartNewScan}
-          />
-        )}
+            {activeTab === "tracker" && (
+              <TrackerView
+                scans={trackedScans}
+                onUpdateScanState={handleUpdateScanState}
+                onDeleteScan={handleDeleteScan}
+                onViewScanDetail={handleViewScanDetail}
+                onStartNewScan={handleStartNewScan}
+                onAddManualScan={(newScan) => {
+                  setTrackedScans((prev) => [newScan, ...prev]);
+                  showToast(`Logged ${newScan.vegetableName} to Tracker`, "success");
+                }}
+              />
+            )}
 
-        {activeTab === "encyclopedia" && (
-          <EncyclopediaView
-            onAskAgronomistAboutDisease={handleAskAgronomistAboutDisease}
-          />
-        )}
+            {activeTab === "encyclopedia" && (
+              <EncyclopediaView
+                onAskAgronomistAboutDisease={handleAskAgronomistAboutDisease}
+                onSelectCropForScanning={(cropName) => {
+                  setActiveTab("scanner");
+                  showToast(`Loaded ${cropName} in scanner`, "info");
+                }}
+              />
+            )}
 
-        {activeTab === "advisor" && (
-          <AgronomistChatModal
-            diagnosisContext={currentDiagnosis?.diagnosis || null}
-            isModal={false}
-          />
+            {activeTab === "advisor" && (
+              <AgronomistChatModal
+                diagnosisContext={currentDiagnosis?.diagnosis || null}
+                isModal={false}
+              />
+            )}
+          </>
         )}
       </main>
 
@@ -255,17 +342,27 @@ export default function App() {
         />
       )}
 
-      {/* Geometric Balance Footer */}
-      <footer className="border-t border-white/10 bg-[#0F1410] py-3 text-[10px] uppercase tracking-widest text-slate-400 font-mono">
+      {/* Footer */}
+      <footer className="border-t border-emerald-900/30 bg-[#0a0f0b] py-4 text-xs text-slate-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center space-x-3">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="font-bold text-white tracking-[0.15em]">System Status: Nominal</span>
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="font-semibold text-slate-300">
+              CropVision AI &bull; {user ? `Signed in as ${user.name}` : "Ready"}
+            </span>
           </div>
-          <div className="flex items-center gap-6 opacity-60">
-            <div>Data Stream: Encrypted (AES-256)</div>
-            <div>Ref: OC-9422</div>
-            <div>Build: v4.1.0-stable</div>
+          <div className="flex items-center gap-4 text-slate-400 text-xs">
+            <button
+              onClick={() => {
+                setShowAuthScreen(false);
+                setActiveTab("admin");
+              }}
+              className="text-amber-400/80 hover:text-amber-300 transition-colors"
+            >
+              Admin Security Vault
+            </button>
+            <span>&bull;</span>
+            <span>Gemini Vision AI</span>
           </div>
         </div>
       </footer>

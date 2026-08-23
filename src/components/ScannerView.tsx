@@ -13,6 +13,7 @@ import {
   SwitchCamera,
   Image as ImageIcon,
   Check,
+  Apple,
 } from "lucide-react";
 import { SAMPLE_VEGETABLES } from "../data/sampleImages";
 import { SamplePreset, DiagnosticResult } from "../types";
@@ -21,32 +22,39 @@ interface ScannerViewProps {
   onDiagnosisComplete: (result: DiagnosticResult, imageBase64: string, notes: string) => void;
 }
 
-const VEGETABLE_OPTIONS = [
+const PRODUCE_OPTIONS = [
   "Onion (Allium cepa)",
-  "Garlic (Allium sativum)",
   "Tomato (Solanum lycopersicum)",
   "Potato (Solanum tuberosum)",
-  "Cabbage / Cauliflower / Broccoli",
-  "Bell Pepper / Chilli",
-  "Cucumber / Zucchini",
-  "Carrot / Radish",
-  "Any / Auto-Detect Vegetable",
+  "Apple (Malus domestica)",
+  "Banana (Musa acuminata)",
+  "Orange / Citrus (Citrus sinensis)",
+  "Strawberry (Fragaria × ananassa)",
+  "Bell Pepper / Chilli (Capsicum annuum)",
+  "Cabbage / Broccoli (Brassica oleracea)",
+  "Carrot / Root (Daucus carota)",
+  "Grapes / Berries (Vitis vinifera)",
+  "Cucumber / Squash (Cucumis sativus)",
+  "Garlic / Shallots (Allium sativum)",
+  "Any / Auto-Detect Produce",
 ];
 
 const STAGE_OPTIONS = [
-  "Storage / Warehouse / Pantry",
-  "Kitchen / Cooking Prep",
+  "Storage / Warehouse / Cold Store",
   "Field / Garden Standing Crop",
+  "Kitchen / Domestic Storage",
   "Market / Retail Display",
+  "Transit / Shipping Container",
 ];
 
 export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete }) => {
   // Input states
   const [selectedImage, setSelectedImage] = useState<string | null>(SAMPLE_VEGETABLES[0].imageData);
   const [mimeType, setMimeType] = useState<string>("image/svg+xml");
-  const [vegetableHint, setVegetableHint] = useState<string>("Onion (Allium cepa)");
-  const [stage, setStage] = useState<string>("Storage / Warehouse / Pantry");
+  const [produceHint, setProduceHint] = useState<string>("Onion (Allium cepa)");
+  const [stage, setStage] = useState<string>("Storage / Warehouse / Cold Store");
   const [notes, setNotes] = useState<string>(SAMPLE_VEGETABLES[0].notes);
+  const [sampleFilter, setSampleFilter] = useState<"All" | "Vegetables" | "Fruits">("All");
 
   // Camera state
   const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
@@ -98,312 +106,255 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
       }
       setIsCameraActive(true);
     } catch (err: any) {
-      console.error("Camera access failed:", err);
+      console.error("Camera access error:", err);
       setCameraError(
-        "Could not access camera. Please check camera permissions or upload an image directly."
+        "Camera access failed. Please ensure camera permissions are granted in browser or upload an image file instead."
       );
       setIsCameraActive(false);
     }
   };
 
-  // Toggle Camera Facing
-  const toggleCameraFacing = () => {
-    const nextFacing = cameraFacing === "environment" ? "user" : "environment";
+  // Flip Camera
+  const toggleCameraFacing = async () => {
+    const nextFacing = cameraFacing === "user" ? "environment" : "user";
     setCameraFacing(nextFacing);
     if (isCameraActive) {
+      stopCamera();
       setTimeout(() => {
         startCamera();
-      }, 100);
+      }, 200);
     }
   };
 
-  // Capture snapshot from camera
-  const captureSnapshot = () => {
+  // Snap Photo from Video Stream
+  const capturePhoto = () => {
     if (!videoRef.current) return;
+    const video = videoRef.current;
     const canvas = document.createElement("canvas");
-    canvas.width = videoRef.current.videoWidth || 640;
-    canvas.height = videoRef.current.videoHeight || 480;
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
     const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
-      setSelectedImage(dataUrl);
-      setMimeType("image/jpeg");
-      stopCamera();
-    }
+    if (!ctx) return;
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+    setSelectedImage(dataUrl);
+    setMimeType("image/jpeg");
+    stopCamera();
   };
 
-  // Handle File Upload
+  // File Upload Handler (Drag-and-Drop or Input)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const fileType = file.type || "image/jpeg";
-    setMimeType(fileType);
+    if (!file.type.startsWith("image/")) {
+      setErrorMsg("Please upload a valid image file (PNG, JPG, WEBP).");
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
         setSelectedImage(event.target.result as string);
-        stopCamera();
+        setMimeType(file.type || "image/jpeg");
+        setErrorMsg(null);
       }
     };
     reader.readAsDataURL(file);
   };
 
-  // Handle Drag and Drop
+  // Drag and Drop Handler
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      setMimeType(file.type || "image/jpeg");
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
           setSelectedImage(event.target.result as string);
-          stopCamera();
+          setMimeType(file.type || "image/jpeg");
+          setErrorMsg(null);
         }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Load a preset sample
-  const handleSelectSample = (sample: SamplePreset) => {
-    setSelectedImage(sample.imageData);
-    setMimeType("image/svg+xml");
-    setVegetableHint(
-      sample.vegetable === "Onion"
-        ? "Onion (Allium cepa)"
-        : sample.vegetable === "Tomato"
-        ? "Tomato (Solanum lycopersicum)"
-        : sample.vegetable === "Potato"
-        ? "Potato (Solanum tuberosum)"
-        : "Any / Auto-Detect Vegetable"
-    );
-    setNotes(sample.notes);
-    stopCamera();
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
   };
 
-  // Run AI Diagnostic Scan
-  const handleRunScan = async () => {
+  // Select Sample Preset
+  const handleSelectSample = (sample: SamplePreset) => {
+    stopCamera();
+    setSelectedImage(sample.imageData);
+    setMimeType("image/svg+xml");
+    setNotes(sample.notes);
+
+    // Pick matching produce option
+    const matched = PRODUCE_OPTIONS.find((v) =>
+      v.toLowerCase().includes(sample.vegetable.toLowerCase())
+    );
+    if (matched) {
+      setProduceHint(matched);
+    }
+  };
+
+  // Trigger Gemini Diagnostic API
+  const handleRunDiagnosis = async () => {
     if (!selectedImage) {
-      setErrorMsg("Please select, capture, or upload a vegetable photo to scan.");
+      setErrorMsg("Please select or capture a crop photo first.");
       return;
     }
 
     setIsAnalyzing(true);
     setErrorMsg(null);
-
-    // Progressive step indicator
-    setAnalysisStep("Extracting morphological features & scale surface texture...");
-    const timer1 = setTimeout(() => {
-      setAnalysisStep("Screening for fungal spores, bacterial rot & tissue softening...");
-    }, 1200);
-    const timer2 = setTimeout(() => {
-      setAnalysisStep("Synthesizing clinical diagnosis, edibility rating & treatment protocol...");
-    }, 2400);
+    setAnalysisStep("Uploading specimen & parsing image features...");
 
     try {
-      const response = await fetch("/api/diagnose-vegetable", {
+      setTimeout(() => {
+        setAnalysisStep("Identifying botanical structures & surface pathologies...");
+      }, 700);
+
+      setTimeout(() => {
+        setAnalysisStep("Differential diagnostics & pathogen identification...");
+      }, 1500);
+
+      setTimeout(() => {
+        setAnalysisStep("Formulating IPM remedies, storage guidance & culinary safety...");
+      }, 2300);
+
+      const response = await fetch("/api/diagnose", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           imageBase64: selectedImage,
-          mimeType,
-          vegetableHint,
-          stage,
-          notes,
+          mimeType: mimeType,
+          vegetableHint: produceHint,
+          stage: stage,
+          userNotes: notes,
         }),
       });
 
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Failed to diagnose vegetable.");
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Server responded with status ${response.status}`);
       }
 
-      onDiagnosisComplete(data.diagnosis, selectedImage, notes);
-    } catch (err: any) {
-      console.error("Scan error:", err);
-      setErrorMsg(
-        err.message || "Diagnostic service is currently unavailable. Please verify connection."
-      );
-    } finally {
+      const result: DiagnosticResult = await response.json();
       setIsAnalyzing(false);
-      setAnalysisStep("");
+      onDiagnosisComplete(result, selectedImage, notes);
+    } catch (err: any) {
+      console.error("Diagnosis error:", err);
+      setIsAnalyzing(false);
+      setErrorMsg(
+        err.message || "Failed to complete crop diagnosis. Please check network connection and try again."
+      );
     }
   };
 
-  return (
-    <div className="space-y-6 font-mono">
-      {/* Intro banner */}
-      <div className="bg-[#151D16] border border-white/10 p-5 sm:p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] uppercase font-bold tracking-[0.2em] bg-green-500/10 text-green-400 border border-green-500/30">
-                <Sparkles className="w-3 h-3" /> Sensor Feed Active
-              </span>
-              <span className="text-[10px] uppercase tracking-widest text-slate-400">Ref: OC-9422 // Multi-Spectrum</span>
-            </div>
-            <h1 className="text-lg sm:text-xl font-bold tracking-[0.1em] uppercase text-white mt-2">
-              Onion &amp; Vegetable Pathology Diagnostic Scanner
-            </h1>
-            <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-              Optical morphology analysis for Allium crops, solanaceae, and field harvest. Detects fungal rot, bacterial lesions, storage soft-neck desiccation, and verifies edibility rating.
-            </p>
-          </div>
+  const filteredSamples = SAMPLE_VEGETABLES.filter((sample) => {
+    const isFruit =
+      sample.vegetable.toLowerCase().includes("apple") ||
+      sample.vegetable.toLowerCase().includes("banana") ||
+      sample.vegetable.toLowerCase().includes("orange") ||
+      sample.vegetable.toLowerCase().includes("strawberry") ||
+      sample.vegetable.toLowerCase().includes("grape");
 
-          <div className="flex items-center gap-2">
-            <button
-              id="scanner-action-preset-onion"
-              onClick={() => handleSelectSample(SAMPLE_VEGETABLES[0])}
-              className="px-3 py-2 border border-yellow-400/40 bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-300 text-[10px] uppercase tracking-[0.15em] font-semibold transition-colors flex items-center gap-1.5"
-            >
-              <Zap className="w-3 h-3" /> Preset: Onion Mold
-            </button>
-            <button
-              id="scanner-action-preset-healthy"
-              onClick={() => handleSelectSample(SAMPLE_VEGETABLES[2])}
-              className="px-3 py-2 border border-green-500/40 bg-green-500/10 hover:bg-green-500/20 text-green-300 text-[10px] uppercase tracking-[0.15em] font-semibold transition-colors flex items-center gap-1.5"
-            >
-              <Check className="w-3 h-3" /> Preset: Healthy Grade-A
-            </button>
-          </div>
+    if (sampleFilter === "Fruits") return isFruit;
+    if (sampleFilter === "Vegetables") return !isFruit;
+    return true;
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Header Banner */}
+      <div className="bg-[#141d16] border border-emerald-900/30 rounded-2xl p-5 sm:p-6 shadow-sm">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <Sparkles className="w-3.5 h-3.5" /> 10+ Vegetable &amp; Fruit AI Diagnostic Lab
+          </span>
         </div>
+        <h1 className="text-xl sm:text-2xl font-bold text-white mt-2">
+          AI Vegetable &amp; Fruit Disease Scanner
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
+          Scan onions, tomatoes, potatoes, apples, bananas, citrus, strawberries, bell peppers, carrots, cabbages, grapes, and more for rot, fungal blight, bacterial wilt, storage disorders, and culinary safety.
+        </p>
       </div>
 
-      {/* Main Scanner Grid */}
+      {/* Main Scanner Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Image / Camera Stage (7 cols) */}
+        {/* Left Column: Image Viewport & Capture (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
           <div
-            onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
-            className="relative bg-[#0F1410] border border-white/10 aspect-[4/3] flex items-center justify-center overflow-hidden geometric-grid group select-none"
+            onDragOver={handleDragOver}
+            className="bg-[#141d16] border border-emerald-900/40 rounded-2xl p-4 min-h-[380px] sm:min-h-[420px] flex flex-col items-center justify-center relative overflow-hidden group shadow-inner"
           >
-            {/* Geometric Corner Brackets */}
-            <div className="absolute inset-4 sm:inset-6 border border-white/10 pointer-events-none z-10">
-              <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-green-400" />
-              <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-green-400" />
-              <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-green-400" />
-              <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-green-400" />
-            </div>
-
             {/* Live Camera View */}
             {isCameraActive ? (
-              <div className="relative w-full h-full bg-black flex items-center justify-center">
+              <div className="w-full h-full flex flex-col items-center justify-center relative">
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
                   muted
-                  className="w-full h-full object-cover"
+                  className="w-full max-h-[360px] object-contain rounded-xl bg-black"
                 />
-
-                {/* Reticle / Framing Target */}
-                <div className="absolute inset-10 border border-dashed border-green-400/50 pointer-events-none flex flex-col justify-between p-3 z-10">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[9px] tracking-[0.2em] uppercase font-bold bg-[#0F1410]/90 text-green-400 px-2 py-0.5 border border-green-500/40">
-                      TARGET ALIGNED
-                    </span>
-                    <span className="text-[9px] tracking-[0.2em] uppercase font-bold bg-[#0F1410]/90 text-yellow-400 px-2 py-0.5 border border-yellow-500/40">
-                      CALIBRATING OPTIC
-                    </span>
-                  </div>
-                  <div className="text-center text-[10px] tracking-wider uppercase text-green-300 bg-[#0F1410]/90 px-3 py-1 border border-white/10 self-center">
-                    Align vegetable specimen within optical crosshair
-                  </div>
-                </div>
-
-                {/* Camera Controls */}
-                <div className="absolute bottom-4 inset-x-0 flex items-center justify-center gap-3 z-20">
+                <div className="absolute bottom-4 flex items-center gap-3">
                   <button
-                    id="btn-toggle-camera-facing"
-                    type="button"
+                    id="btn-capture-photo"
+                    onClick={capturePhoto}
+                    className="px-5 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-emerald-950/60 transition-all active:scale-95"
+                  >
+                    <Camera className="w-4 h-4" />
+                    <span>Capture Photo</span>
+                  </button>
+                  <button
                     onClick={toggleCameraFacing}
-                    className="p-2.5 bg-[#151D16] hover:bg-[#1f2b20] text-slate-200 border border-white/20 transition-colors"
+                    className="p-2.5 rounded-full bg-[#0d130e]/80 hover:bg-[#0d130e] text-white border border-emerald-900/50 backdrop-blur transition-all"
                     title="Switch Camera"
                   >
                     <SwitchCamera className="w-4 h-4" />
                   </button>
-
                   <button
-                    id="btn-capture-snapshot"
-                    type="button"
-                    onClick={captureSnapshot}
-                    className="px-5 py-2.5 bg-green-500 hover:bg-green-400 text-black font-bold uppercase tracking-[0.2em] text-xs flex items-center gap-2 transition-colors"
-                  >
-                    <Camera className="w-4 h-4" />
-                    <span>Capture Target</span>
-                  </button>
-
-                  <button
-                    id="btn-cancel-camera"
-                    type="button"
                     onClick={stopCamera}
-                    className="px-3 py-2.5 bg-[#151D16] hover:bg-white/10 text-slate-300 border border-white/20 text-xs uppercase tracking-wider transition-colors"
+                    className="px-4 py-2.5 rounded-full bg-stone-800 hover:bg-stone-700 text-slate-300 text-xs font-semibold transition-all"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
             ) : selectedImage ? (
-              /* Selected Image Preview */
-              <div className="relative w-full h-full bg-[#0F1410] flex items-center justify-center p-4">
-                <img
-                  src={selectedImage}
-                  alt="Vegetable specimen to scan"
-                  className="max-h-full max-w-full object-contain"
-                />
-
-                {/* Geometric Scanning Metadata Stamp */}
-                <div className="absolute bottom-3 left-4 text-[9px] uppercase tracking-widest text-slate-400 z-20 bg-[#0F1410]/90 px-2 py-1 border border-white/10">
-                  FOV: 65.4° // RES: 4K OPTIC // SENSOR: LOCKED
+              /* Selected / Captured Image Preview */
+              <div className="w-full h-full flex flex-col items-center justify-center relative">
+                <div className="max-h-[340px] sm:max-h-[380px] w-full flex items-center justify-center overflow-hidden rounded-xl bg-[#0d130e] p-2">
+                  <img
+                    src={selectedImage}
+                    alt="Specimen preview"
+                    className="max-h-[330px] w-auto object-contain rounded-lg shadow-md"
+                    referrerPolicy="no-referrer"
+                  />
                 </div>
 
-                {/* Geometric Scanning Animation Overlay during AI Processing */}
-                {isAnalyzing && (
-                  <div className="absolute inset-0 bg-[#0F1410]/80 backdrop-blur-[2px] flex flex-col items-center justify-center z-30">
-                    <div className="w-full absolute top-0 left-0 h-0.5 bg-green-400 shadow-[0_0_15px_#22c55e] animate-pulse" />
-                    <div className="p-6 bg-[#151D16] border border-green-500/40 text-center max-w-xs mx-4">
-                      <div className="w-10 h-10 border border-green-500/50 flex items-center justify-center mx-auto mb-3 text-green-400 animate-spin">
-                        <RefreshCw className="w-5 h-5" />
-                      </div>
-                      <div className="text-xs uppercase tracking-[0.2em] font-bold text-white">Diagnostic Analysis</div>
-                      <div className="text-[10px] text-green-400 mt-2 tracking-wider uppercase">{analysisStep}</div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Badge Overlay */}
-                <div className="absolute top-3 left-3 bg-[#151D16]/90 border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-widest text-green-400 flex items-center gap-1.5 z-20">
-                  <div className="w-1.5 h-1.5 bg-green-400 animate-pulse" />
-                  <span>Specimen Loaded</span>
-                </div>
-
-                {/* Change photo actions on hover */}
-                <div className="absolute bottom-3 right-3 flex items-center gap-2 z-20">
+                {/* Overlaid quick actions */}
+                <div className="absolute bottom-4 flex items-center gap-2">
                   <button
-                    id="btn-switch-to-camera"
+                    id="btn-retake-photo"
                     onClick={startCamera}
-                    className="px-3 py-1.5 bg-[#151D16] hover:bg-[#1f2b20] text-slate-200 border border-white/20 text-[10px] uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-[#141d16]/90 hover:bg-[#1a261d] text-slate-200 border border-emerald-900/40 text-xs font-medium flex items-center gap-1.5 backdrop-blur transition-all shadow"
                   >
-                    <Camera className="w-3.5 h-3.5 text-green-400" />
+                    <Camera className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Retake</span>
                   </button>
                   <label
                     htmlFor="file-upload-overlay"
-                    className="px-3 py-1.5 bg-[#151D16] hover:bg-[#1f2b20] text-slate-200 border border-white/20 text-[10px] uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-[#141d16]/90 hover:bg-[#1a261d] text-slate-200 border border-emerald-900/40 text-xs font-medium flex items-center gap-1.5 backdrop-blur transition-all cursor-pointer shadow"
                   >
-                    <Upload className="w-3.5 h-3.5 text-yellow-400" />
-                    <span>Upload</span>
+                    <Upload className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Upload Image</span>
                     <input
                       id="file-upload-overlay"
                       type="file"
@@ -417,34 +368,29 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
             ) : (
               /* Empty state / dropzone */
               <div className="text-center p-6 space-y-4">
-                <div className="text-xs text-green-400 opacity-60 tracking-[0.3em] uppercase">
-                  Awaiting Target Alignment
+                <div className="w-16 h-16 rounded-2xl bg-emerald-950/40 border border-emerald-800/40 flex items-center justify-center mx-auto text-emerald-400 shadow-inner">
+                  <Camera className="w-8 h-8" />
                 </div>
-                <div className="w-32 h-32 border border-white/10 bg-white/5 flex items-center justify-center mx-auto">
-                  <svg className="w-16 h-16 opacity-20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="0.5">
-                    <path d="M12 2v20M2 12h20" />
-                    <circle cx="12" cy="12" r="8" />
-                  </svg>
-                </div>
-                <div className="flex justify-center gap-2">
-                  <div className="w-1 h-1 bg-green-400" />
-                  <div className="w-1 h-1 bg-green-400" />
-                  <div className="w-8 h-1 bg-green-400" />
+                <div>
+                  <h3 className="text-base font-semibold text-white">Upload or Take a Photo</h3>
+                  <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                    Drag &amp; drop any fruit or vegetable image, take a camera snap, or choose a preset specimen below.
+                  </p>
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                   <button
                     id="btn-start-camera"
                     onClick={startCamera}
-                    className="px-4 py-2 bg-green-500 hover:bg-green-400 text-black font-bold text-xs uppercase tracking-[0.15em] flex items-center gap-2 transition-colors"
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-2 shadow-md shadow-emerald-950/40 transition-all"
                   >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span>Active Camera</span>
+                    <Camera className="w-4 h-4" />
+                    <span>Open Camera</span>
                   </button>
                   <label
                     htmlFor="file-upload-empty"
-                    className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white font-medium text-xs uppercase tracking-[0.15em] flex items-center gap-2 border border-white/10 cursor-pointer transition-colors"
+                    className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-white font-medium text-xs flex items-center gap-2 border border-stone-700 cursor-pointer transition-all"
                   >
-                    <Upload className="w-3.5 h-3.5" />
+                    <Upload className="w-4 h-4 text-amber-400" />
                     <span>Upload Image</span>
                     <input
                       id="file-upload-empty"
@@ -461,50 +407,67 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
 
           {/* Camera Error Message */}
           {cameraError && (
-            <div className="p-3 bg-red-950/40 border border-red-800/60 text-xs text-red-300 flex items-center gap-2">
+            <div className="p-3 bg-red-950/40 border border-red-800/60 rounded-xl text-xs text-red-300 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
               <span>{cameraError}</span>
             </div>
           )}
 
-          {/* Sample Preset Selector */}
-          <div className="bg-[#121813] border border-white/10 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-green-400" /> Specimen Presets Reference
+          {/* Sample Preset Selector with 12 Produce Types */}
+          <div className="bg-[#141d16] border border-emerald-900/30 rounded-2xl p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-emerald-400" /> 12 Preset Crop Specimen Presets
               </span>
-              <span className="text-[9px] uppercase tracking-widest text-slate-400">Instant Load</span>
+
+              {/* Sample Filter Tabs */}
+              <div className="flex items-center gap-1">
+                {(["All", "Vegetables", "Fruits"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setSampleFilter(tab)}
+                    className={`px-2.5 py-0.5 rounded-lg text-[11px] font-medium transition-all ${
+                      sampleFilter === tab
+                        ? "bg-emerald-600 text-white font-semibold"
+                        : "bg-[#0d130e] text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-              {SAMPLE_VEGETABLES.map((sample) => {
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+              {filteredSamples.map((sample) => {
                 const isSelected = selectedImage === sample.imageData;
                 return (
                   <button
                     key={sample.id}
                     id={`btn-sample-${sample.id}`}
                     onClick={() => handleSelectSample(sample)}
-                    className={`p-2 border text-left transition-colors relative flex flex-col ${
+                    className={`p-2 rounded-xl border text-left transition-all relative flex flex-col ${
                       isSelected
-                        ? "bg-green-500/10 border-green-500 text-green-300"
-                        : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-400 hover:text-slate-200"
+                        ? "bg-emerald-950/60 border-emerald-500 text-emerald-200 ring-1 ring-emerald-500/50"
+                        : "bg-[#0d130e] hover:bg-[#1a261d] border-emerald-950 text-slate-400 hover:text-slate-200"
                     }`}
                   >
-                    <div className="w-full aspect-square bg-[#0F1410] mb-1.5 border border-white/10 overflow-hidden">
+                    <div className="w-full aspect-square rounded-lg overflow-hidden bg-[#0d130e] mb-1.5 border border-emerald-900/30">
                       <img
                         src={sample.imageData}
                         alt={sample.title}
                         className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
                       />
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider truncate block text-white">
+                    <span className="text-xs font-semibold truncate block text-slate-200">
                       {sample.vegetable}
                     </span>
-                    <span className="text-[9px] text-slate-400 line-clamp-1">
+                    <span className="text-[10px] text-slate-400 line-clamp-1">
                       {sample.conditionName}
                     </span>
                     {isSelected && (
-                      <span className="absolute top-2 right-2 w-3.5 h-3.5 bg-green-500 text-black flex items-center justify-center font-bold text-[8px]">
+                      <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center font-bold text-[10px]">
                         ✓
                       </span>
                     )}
@@ -517,119 +480,115 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
 
         {/* Right Column: Scan Parameters & Trigger (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="bg-[#121813] border border-white/10 p-5 sm:p-6 space-y-4">
-            <div className="text-[10px] tracking-[0.2em] uppercase opacity-60 mb-2 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-green-400" />
-              <span>Target Parameters</span>
-            </div>
+          <div className="bg-[#141d16] border border-emerald-900/30 rounded-2xl p-5 sm:p-6 space-y-4">
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-400" /> Diagnosis Specimen Parameters
+            </h2>
 
-            {/* Vegetable Type Selector */}
+            {/* Produce Type Selector */}
             <div>
-              <label htmlFor="select-vegetable-type" className="block text-[10px] uppercase tracking-wider text-slate-400 mb-1.5">
-                Crop Species Classification
+              <label htmlFor="select-produce-type" className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Vegetable or Fruit Crop
               </label>
               <select
-                id="select-vegetable-type"
-                value={vegetableHint}
-                onChange={(e) => setVegetableHint(e.target.value)}
-                className="w-full bg-[#0F1410] border border-white/10 px-3 py-2 text-xs text-white focus:outline-none focus:border-green-500 transition-colors"
+                id="select-produce-type"
+                value={produceHint}
+                onChange={(e) => setProduceHint(e.target.value)}
+                className="w-full bg-[#0d130e] border border-emerald-900/40 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
               >
-                {VEGETABLE_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt} className="bg-[#0F1410] text-slate-200">
+                {PRODUCE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt} className="bg-[#0d130e] text-slate-200">
                     {opt}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Stage / Context Selector */}
+            {/* Growth / Storage Stage */}
             <div>
-              <label htmlFor="select-stage-context" className="block text-[10px] uppercase tracking-wider text-slate-400 mb-1.5">
-                Storage &amp; Environmental Phase
+              <label htmlFor="select-stage" className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Environment / Specimen Origin
               </label>
               <select
-                id="select-stage-context"
+                id="select-stage"
                 value={stage}
                 onChange={(e) => setStage(e.target.value)}
-                className="w-full bg-[#0F1410] border border-white/10 px-3 py-2 text-xs text-white focus:outline-none focus:border-green-500 transition-colors"
+                className="w-full bg-[#0d130e] border border-emerald-900/40 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
               >
-                {STAGE_OPTIONS.map((st) => (
-                  <option key={st} value={st} className="bg-[#0F1410] text-slate-200">
-                    {st}
+                {STAGE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt} className="bg-[#0d130e] text-slate-200">
+                    {opt}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* User Observations / Field Notes */}
+            {/* Observation Notes */}
             <div>
-              <label htmlFor="input-field-notes" className="block text-[10px] uppercase tracking-wider text-slate-400 mb-1.5">
-                Field Observation Telemetry (Optional)
+              <label htmlFor="input-notes" className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Observed Symptoms &amp; Storage Conditions (Optional)
               </label>
               <textarea
-                id="input-field-notes"
+                id="input-notes"
+                rows={3}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-                placeholder="E.g. Onion neck softening, dark powdery spores under outer tunics, stored at 75% RH..."
-                className="w-full bg-[#0F1410] border border-white/10 px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-green-500 transition-colors placeholder:text-slate-600 resize-none font-mono"
+                placeholder="e.g. Soft rotting neck, powdery black spores, storage room humidity at 80%..."
+                className="w-full bg-[#0d130e] border border-emerald-900/40 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-500"
               />
             </div>
 
             {/* Error Message */}
             {errorMsg && (
-              <div className="p-3 bg-red-950/50 border border-red-800 text-xs text-red-300 flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="font-bold uppercase tracking-wider text-[10px]">Diagnostic Failure</p>
-                  <p className="text-red-300/90 text-xs">{errorMsg}</p>
+              <div className="p-3 bg-red-950/40 border border-red-800/60 rounded-xl text-xs text-red-300 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-400 mt-0.5" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
+            {/* Submit / Run Scan Button */}
+            <button
+              id="btn-run-diagnosis"
+              disabled={isAnalyzing || !selectedImage}
+              onClick={handleRunDiagnosis}
+              className="w-full py-3.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 transition-all active:scale-[0.99]"
+            >
+              {isAnalyzing ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Analyzing Specimen with Gemini...</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4 fill-current" />
+                  <span>Diagnose Crop Health &amp; Rot</span>
+                </>
+              )}
+            </button>
+
+            {/* Progress Step Indicator during Scan */}
+            {isAnalyzing && (
+              <div className="p-3.5 bg-[#0d130e] border border-emerald-900/50 rounded-xl space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                    <RefreshCw className="w-3 h-3 animate-spin" /> Deep Botanical Scan
+                  </span>
+                  <span className="text-slate-400 text-[11px]">Gemini 3.7 Flash</span>
+                </div>
+                <p className="text-xs text-slate-300">{analysisStep}</p>
+                <div className="w-full h-1.5 bg-emerald-950 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full animate-pulse w-3/4"></div>
                 </div>
               </div>
             )}
 
-            {/* Scan Action Buttons - Geometric Balance Style */}
-            <div className="space-y-3 pt-2">
-              <button
-                id="btn-execute-diagnosis-scan"
-                type="button"
-                disabled={isAnalyzing || !selectedImage}
-                onClick={handleRunScan}
-                className={`w-full py-4 border text-xs uppercase tracking-[0.2em] font-bold flex items-center justify-center gap-2 transition-colors ${
-                  isAnalyzing || !selectedImage
-                    ? "border-white/10 bg-white/5 text-white/40 cursor-not-allowed"
-                    : "border-green-500 text-green-400 hover:bg-green-500 hover:text-black"
-                }`}
-              >
-                {isAnalyzing ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Processing Spectrum...</span>
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4" />
-                    <span>Initiate Scan</span>
-                  </>
-                )}
-              </button>
-
-              <div className="text-[9px] uppercase tracking-widest text-slate-400 text-center opacity-60">
-                Optical Model: Botanical Pathology ML v4.1
-              </div>
+            {/* Confidence & Diagnostic Guarantee info */}
+            <div className="pt-2 border-t border-emerald-900/30 flex items-center gap-2 text-slate-400 text-[11px]">
+              <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>
+                Evaluates 10+ crops against 40+ fungal, bacterial, physiological &amp; post-harvest diseases.
+              </span>
             </div>
-          </div>
-
-          {/* Quick Diagnostics Tip Card */}
-          <div className="bg-[#151D16] border border-white/10 p-4 space-y-2 text-xs">
-            <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-300 flex items-center gap-1.5">
-              <Info className="w-3.5 h-3.5 text-yellow-400" />
-              <span>Inspection Guidelines</span>
-            </div>
-            <ul className="text-[11px] text-slate-400 space-y-1.5 pl-4 list-disc">
-              <li>Onions: inspect both dried outer tunics and the neck closure plate.</li>
-              <li>Internal decay: cross-sectioning allows diagnostic view of fleshy scale rings.</li>
-              <li>Avoid high-glare lighting directly over lesion surface.</li>
-            </ul>
           </div>
         </div>
       </div>

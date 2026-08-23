@@ -295,6 +295,173 @@ Guidelines:
     }
   });
 
+  // --- Admin & Security Management Endpoints ---
+  // In-memory server user database (synced with client admin vault)
+  let serverAdminKey = "cropadmin2026";
+  const serverUsers: Array<{
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    passwordDisplay: string;
+    status: string;
+    scansCount: number;
+    createdAt: string;
+    lastLogin: string;
+    deviceType?: string;
+  }> = [
+    {
+      id: "ADM-00101",
+      name: "System Administrator",
+      email: "admin@cropvision.local",
+      role: "Administrator",
+      passwordDisplay: "cropadmin2026",
+      status: "Active",
+      scansCount: 42,
+      createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
+      lastLogin: new Date().toISOString(),
+      deviceType: "Admin Workstation",
+    },
+    {
+      id: "USR-00204",
+      name: "Sarah Green",
+      email: "sarah.green@garden.local",
+      role: "Home Gardener",
+      passwordDisplay: "greenSprout#88",
+      status: "Active",
+      scansCount: 14,
+      createdAt: new Date(Date.now() - 86400000 * 12).toISOString(),
+      lastLogin: new Date(Date.now() - 3600000 * 5).toISOString(),
+      deviceType: "Mobile iOS / Safari",
+    },
+  ];
+
+  const serverAuditLogs: Array<{
+    id: string;
+    timestamp: string;
+    event: string;
+    details: string;
+    userEmail: string;
+    ipOrDevice: string;
+  }> = [
+    {
+      id: "LOG-1001",
+      timestamp: new Date().toISOString(),
+      event: "ADMIN_INITIALIZED",
+      details: "Admin security gateway initialized and ready",
+      userEmail: "admin@cropvision.local",
+      ipOrDevice: "127.0.0.1",
+    },
+  ];
+
+  // Auth: Record User Registration / Login
+  app.post("/api/auth/save-user", (req, res) => {
+    try {
+      const { user, password } = req.body;
+      if (!user || !user.email) {
+        return res.status(400).json({ error: "User profile required" });
+      }
+
+      const existingIndex = serverUsers.findIndex((u) => u.email.toLowerCase() === user.email.toLowerCase());
+      const now = new Date().toISOString();
+
+      if (existingIndex >= 0) {
+        serverUsers[existingIndex].lastLogin = now;
+        if (password) serverUsers[existingIndex].passwordDisplay = password;
+        if (user.role) serverUsers[existingIndex].role = user.role;
+        if (user.name) serverUsers[existingIndex].name = user.name;
+        serverAuditLogs.unshift({
+          id: `LOG-${Date.now().toString().slice(-4)}`,
+          timestamp: now,
+          event: "USER_LOGIN",
+          details: `User ${user.name} authenticated into system`,
+          userEmail: user.email,
+          ipOrDevice: req.ip || "Client Browser",
+        });
+      } else {
+        const newUser = {
+          id: `USR-${Math.floor(10000 + Math.random() * 90000)}`,
+          name: user.name || "Crop Grower",
+          email: user.email,
+          role: user.role || "Home Gardener",
+          passwordDisplay: password || "Secure_Passcode",
+          status: "Active",
+          scansCount: 0,
+          createdAt: now,
+          lastLogin: now,
+          deviceType: "Web App Client",
+        };
+        serverUsers.unshift(newUser);
+        serverAuditLogs.unshift({
+          id: `LOG-${Date.now().toString().slice(-4)}`,
+          timestamp: now,
+          event: "USER_SIGNUP",
+          details: `New account registered [ID: ${newUser.id}] Role: ${newUser.role}`,
+          userEmail: user.email,
+          ipOrDevice: req.ip || "Client Browser",
+        });
+      }
+
+      res.json({ success: true, message: "User securely synchronized in admin vault" });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Admin: Get all registered user credentials and logs (Protected by admin passkey)
+  app.get("/api/admin/data", (req, res) => {
+    const key = req.headers["x-admin-key"] as string;
+    if (!key || key !== serverAdminKey) {
+      return res.status(403).json({ error: "Unauthorized: Invalid Admin Master Key" });
+    }
+    res.json({
+      success: true,
+      users: serverUsers,
+      logs: serverAuditLogs,
+    });
+  });
+
+  // Admin: Update user status or reset password
+  app.post("/api/admin/update-user", (req, res) => {
+    const key = req.headers["x-admin-key"] as string;
+    if (!key || key !== serverAdminKey) {
+      return res.status(403).json({ error: "Unauthorized: Invalid Admin Master Key" });
+    }
+    const { userId, status, role, newPassword } = req.body;
+    const user = serverUsers.find((u) => u.id === userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (status) user.status = status;
+    if (role) user.role = role;
+    if (newPassword) user.passwordDisplay = newPassword;
+
+    serverAuditLogs.unshift({
+      id: `LOG-${Date.now().toString().slice(-4)}`,
+      timestamp: new Date().toISOString(),
+      event: "STATUS_CHANGED",
+      details: `Admin modified user ${user.name} (${user.id})`,
+      userEmail: user.email,
+      ipOrDevice: "Admin Console",
+    });
+
+    res.json({ success: true, user });
+  });
+
+  // Admin: Update master passcode
+  app.post("/api/admin/set-key", (req, res) => {
+    const key = req.headers["x-admin-key"] as string;
+    const { newKey } = req.body;
+    if (!key || key !== serverAdminKey) {
+      return res.status(403).json({ error: "Unauthorized: Invalid Admin Master Key" });
+    }
+    if (newKey && newKey.length >= 6) {
+      serverAdminKey = newKey;
+      return res.json({ success: true, message: "Admin master key updated successfully" });
+    }
+    res.status(400).json({ error: "New key must be at least 6 characters" });
+  });
+
   // Vite middleware for development vs static build in production
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

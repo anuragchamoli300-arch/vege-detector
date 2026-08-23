@@ -1,3 +1,50 @@
+export type UserRole = 
+  | "Home Gardener" 
+  | "Organic Farmer" 
+  | "Grocer / Kitchen" 
+  | "Agri Specialist" 
+  | "Guest" 
+  | "Administrator";
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  isAdmin?: boolean;
+  avatarColor?: string;
+  createdAt: string;
+}
+
+export interface AdminUserAccount {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  passwordDisplay: string;
+  status: "Active" | "Suspended" | "Pending Review";
+  scansCount: number;
+  createdAt: string;
+  lastLogin: string;
+  deviceType?: string;
+}
+
+export interface AdminAuditLog {
+  id: string;
+  timestamp: string;
+  event: 
+    | "USER_SIGNUP" 
+    | "USER_LOGIN" 
+    | "SCAN_DIAGNOSIS" 
+    | "STATUS_CHANGED" 
+    | "PASSWORD_RESET" 
+    | "USER_DELETED" 
+    | "ADMIN_LOGIN";
+  details: string;
+  userEmail: string;
+  ipOrDevice: string;
+}
+
 export type HealthStatus = 
   | "HEALTHY" 
   | "MILD_ISSUE" 
@@ -16,13 +63,18 @@ export type PathogenCategory =
   | "Storage Disorder" 
   | "None/Healthy";
 
+export type CropCategory = "Vegetable" | "Fruit";
+
 export type VegetableFamily = 
   | "Allium (Onion, Garlic, Leek)" 
   | "Solanaceae (Tomato, Potato, Pepper)" 
-  | "Brassica (Cabbage, Broccoli)" 
-  | "Cucurbit (Cucumber, Gourd)" 
-  | "Root & Tuber (Carrot, Radish)" 
-  | "Other Vegetables";
+  | "Rosaceae Fruits (Apple, Strawberry, Peach)"
+  | "Citrus & Tropical (Orange, Banana, Lemon)"
+  | "Vitaceae (Grapes & Berries)"
+  | "Brassica (Cabbage, Broccoli, Cauliflower)" 
+  | "Cucurbit (Cucumber, Zucchini, Melon)" 
+  | "Root & Tuber (Carrot, Radish, Beet)" 
+  | "Other Fruits & Vegetables";
 
 export interface EdibilitySafety {
   isSafeToEat: boolean;

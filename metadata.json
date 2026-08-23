@@ -1,0 +1,10 @@
+{
+  "name": "Vegetable Problem Scanner & Health Tracker",
+  "description": "AI-powered vegetable problem detector, disease scanner, and crop health tracker with instant camera scanning, treatment plans, and history tracking.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

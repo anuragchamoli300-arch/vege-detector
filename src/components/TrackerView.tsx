@@ -148,7 +148,7 @@ export const TrackerView: React.FC<TrackerViewProps> = ({
       (s) => s.vegetable.toLowerCase().includes(newCropName.split(" ")[0].toLowerCase())
     );
 
-    const imagePreview = matchingSample?.imageData || SAMPLE_VEGETABLES[0].imageData;
+    const imagePreview = matchingSample?.imageData || SAMPLE_VEGETABLES[0]?.imageData || "";
 
     const newScanRecord: TrackedScan = {
       id: `scan-${newCropName.split(" ")[0].toLowerCase()}-${Date.now().toString().slice(-4)}`,

@@ -27,6 +27,16 @@ export interface AdminUserAccount {
   createdAt: string;
   lastLogin: string;
   deviceType?: string;
+  savedToAdminPanel?: boolean;
+  loginMethod?: string;
+  loginCount?: number;
+  savedAt?: string;
+  loginHistory?: Array<{
+    timestamp: string;
+    ipOrDevice: string;
+    event: string;
+    method?: string;
+  }>;
 }
 
 export interface AdminAuditLog {
@@ -35,6 +45,7 @@ export interface AdminAuditLog {
   event: 
     | "USER_SIGNUP" 
     | "USER_LOGIN" 
+    | "LOGIN_SAVED_TO_ADMIN"
     | "SCAN_DIAGNOSIS" 
     | "STATUS_CHANGED" 
     | "PASSWORD_RESET" 
@@ -63,18 +74,23 @@ export type PathogenCategory =
   | "Storage Disorder" 
   | "None/Healthy";
 
-export type CropCategory = "Vegetable" | "Fruit";
+export type CropCategory = "Vegetable";
 
 export type VegetableFamily = 
-  | "Allium (Onion, Garlic, Leek)" 
-  | "Solanaceae (Tomato, Potato, Pepper)" 
-  | "Rosaceae Fruits (Apple, Strawberry, Peach)"
-  | "Citrus & Tropical (Orange, Banana, Lemon)"
-  | "Vitaceae (Grapes & Berries)"
-  | "Brassica (Cabbage, Broccoli, Cauliflower)" 
-  | "Cucurbit (Cucumber, Zucchini, Melon)" 
-  | "Root & Tuber (Carrot, Radish, Beet)" 
-  | "Other Fruits & Vegetables";
+  | "Allium (Onion, Garlic, Shallots, Leek)" 
+  | "Allium (Onion, Garlic, Leek)"
+  | "Solanaceae (Tomato, Potato, Pepper, Eggplant)" 
+  | "Solanaceae (Tomato, Potato, Pepper)"
+  | "Brassica (Cabbage, Broccoli, Cauliflower, Kale)" 
+  | "Brassica (Cabbage, Broccoli, Cauliflower)"
+  | "Cucurbit (Cucumber, Squash, Pumpkin, Zucchini)" 
+  | "Cucurbit (Cucumber, Zucchini, Melon)"
+  | "Root & Tuber (Carrot, Radish, Beetroot, Turnip)" 
+  | "Root & Tuber (Carrot, Radish, Beet)"
+  | "Legumes & Pods (Peas, Beans)"
+  | "Leafy Greens (Spinach, Lettuce, Chard)"
+  | "Malvaceae (Okra, Hibiscus)"
+  | "Other Vegetables";
 
 export interface EdibilitySafety {
   isSafeToEat: boolean;
@@ -156,3 +172,28 @@ export interface SamplePreset {
   imageData: string;
   notes: string;
 }
+
+export interface GoogleGroundingSource {
+  title: string;
+  uri: string;
+}
+
+export interface GoogleResearchResult {
+  vegetable: string;
+  condition: string;
+  summary: string;
+  fullReport: string;
+  searchQueries: string[];
+  sources: GoogleGroundingSource[];
+  timestamp: string;
+}
+
+export interface VegetableApiEndpoint {
+  method: "GET" | "POST";
+  path: string;
+  description: string;
+  parameters?: Record<string, string>;
+  exampleBody?: Record<string, any>;
+  sampleResponse?: Record<string, any>;
+}
+

@@ -14,29 +14,37 @@ import {
   Image as ImageIcon,
   Check,
   Apple,
+  Volume2,
+  Globe,
+  Code,
+  Search,
 } from "lucide-react";
 import { SAMPLE_VEGETABLES } from "../data/sampleImages";
 import { SamplePreset, DiagnosticResult } from "../types";
+import { soundEngine } from "../utils/audioEffects";
+import { VegetableApiModal } from "./VegetableApiModal";
+import { VegetableSearchBar, VegetableItem } from "./VegetableSearchBar";
 
 interface ScannerViewProps {
   onDiagnosisComplete: (result: DiagnosticResult, imageBase64: string, notes: string) => void;
+  initialVegetable?: string;
+  triggerCameraTimestamp?: number;
+  onSelectVegetableForCamera?: (vegetable: VegetableItem) => void;
 }
 
 const PRODUCE_OPTIONS = [
   "Onion (Allium cepa)",
   "Tomato (Solanum lycopersicum)",
   "Potato (Solanum tuberosum)",
-  "Apple (Malus domestica)",
-  "Banana (Musa acuminata)",
-  "Orange / Citrus (Citrus sinensis)",
-  "Strawberry (Fragaria × ananassa)",
   "Bell Pepper / Chilli (Capsicum annuum)",
-  "Cabbage / Broccoli (Brassica oleracea)",
-  "Carrot / Root (Daucus carota)",
-  "Grapes / Berries (Vitis vinifera)",
-  "Cucumber / Squash (Cucumis sativus)",
+  "Cabbage / Broccoli / Cauliflower (Brassica oleracea)",
+  "Carrot / Radish (Daucus carota)",
+  "Cucumber / Zucchini / Squash (Cucumis sativus)",
+  "Eggplant / Brinjal (Solanum melongena)",
+  "Spinach / Leafy Greens (Spinacia oleracea)",
+  "Okra / Bhindi (Abelmoschus esculentus)",
   "Garlic / Shallots (Allium sativum)",
-  "Any / Auto-Detect Produce",
+  "Any / Auto-Detect Vegetable",
 ];
 
 const STAGE_OPTIONS = [
@@ -47,14 +55,18 @@ const STAGE_OPTIONS = [
   "Transit / Shipping Container",
 ];
 
-export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete }) => {
+export const ScannerView: React.FC<ScannerViewProps> = ({
+  onDiagnosisComplete,
+  initialVegetable,
+  triggerCameraTimestamp,
+  onSelectVegetableForCamera,
+}) => {
   // Input states
-  const [selectedImage, setSelectedImage] = useState<string | null>(SAMPLE_VEGETABLES[0].imageData);
+  const [selectedImage, setSelectedImage] = useState<string | null>(SAMPLE_VEGETABLES[0]?.imageData || null);
   const [mimeType, setMimeType] = useState<string>("image/svg+xml");
-  const [produceHint, setProduceHint] = useState<string>("Onion (Allium cepa)");
+  const [produceHint, setProduceHint] = useState<string>(initialVegetable || "Onion (Allium cepa)");
   const [stage, setStage] = useState<string>("Storage / Warehouse / Cold Store");
-  const [notes, setNotes] = useState<string>(SAMPLE_VEGETABLES[0].notes);
-  const [sampleFilter, setSampleFilter] = useState<"All" | "Vegetables" | "Fruits">("All");
+  const [notes, setNotes] = useState<string>(SAMPLE_VEGETABLES[0]?.notes || "");
 
   // Camera state
   const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
@@ -62,11 +74,14 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
   const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const cameraViewportRef = useRef<HTMLDivElement | null>(null);
 
   // Analysis / Loading state
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [analysisStep, setAnalysisStep] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isApiModalOpen, setIsApiModalOpen] = useState<boolean>(false);
+  const [cameraActiveVegetableName, setCameraActiveVegetableName] = useState<string | null>(null);
 
   // Stop camera helper
   const stopCamera = useCallback(() => {
@@ -75,6 +90,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
       streamRef.current = null;
     }
     setIsCameraActive(false);
+    setCameraActiveVegetableName(null);
   }, []);
 
   // Clean up camera on unmount
@@ -84,32 +100,114 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
     };
   }, [stopCamera]);
 
-  // Start Camera
+  // Handle external vegetable selection & auto-camera trigger
+  useEffect(() => {
+    if (initialVegetable) {
+      const match = PRODUCE_OPTIONS.find(
+        (p) => p.toLowerCase().includes(initialVegetable.toLowerCase()) || initialVegetable.toLowerCase().includes(p.toLowerCase())
+      );
+      setProduceHint(match || initialVegetable);
+    }
+  }, [initialVegetable]);
+
+  useEffect(() => {
+    if (triggerCameraTimestamp) {
+      startCamera();
+      if (initialVegetable) {
+        setCameraActiveVegetableName(initialVegetable);
+      }
+      setTimeout(() => {
+        cameraViewportRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+    }
+  }, [triggerCameraTimestamp]);
+
+  // Handle local vegetable search selection
+  const handleLocalVegetableSearchSelect = (veg: VegetableItem) => {
+    const match = PRODUCE_OPTIONS.find(
+      (p) => p.toLowerCase().includes(veg.name.toLowerCase()) || veg.name.toLowerCase().includes(p.toLowerCase())
+    ) || veg.scannerOption;
+
+    setProduceHint(match);
+    setCameraActiveVegetableName(veg.name);
+    startCamera();
+    
+    // Also propagate to parent if provided
+    if (onSelectVegetableForCamera) {
+      onSelectVegetableForCamera(veg);
+    }
+
+    setTimeout(() => {
+      cameraViewportRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  };
+
+  // Bind active stream to video element whenever video element or camera state mounts
+  useEffect(() => {
+    if (isCameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch((e) => console.warn("Video autoPlay caught:", e));
+    }
+  }, [isCameraActive]);
+
+  // Start Camera - Requests browser permission on-demand
   const startCamera = async () => {
     setCameraError(null);
+    if (typeof navigator === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraError(
+        "Direct camera access is not supported by your browser in this view. Please use 'Take Photo with Mobile Camera' or upload an image file."
+      );
+      return;
+    }
+
     try {
       if (streamRef.current) {
         stopCamera();
       }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: cameraFacing,
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
+
+      let stream: MediaStream;
+      try {
+        // Attempt ideal resolution & requested facing mode
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: cameraFacing },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        });
+      } catch (idealErr) {
+        console.warn("Retrying camera with generic constraints:", idealErr);
+        // Fallback to basic video constraint if device does not support ideal parameters
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
+
       streamRef.current = stream;
+      setIsCameraActive(true);
+
+      // If video element is already available in DOM:
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        videoRef.current.play().catch((e) => console.warn("Video play error:", e));
       }
-      setIsCameraActive(true);
     } catch (err: any) {
       console.error("Camera access error:", err);
-      setCameraError(
-        "Camera access failed. Please ensure camera permissions are granted in browser or upload an image file instead."
-      );
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        setCameraError(
+          "Camera access permission was denied or dismissed. Please click the camera/lock icon in your browser address bar to allow camera access, or use the Native Camera / Upload option."
+        );
+      } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+        setCameraError("No camera found on this device. Please upload an image or select a specimen preset.");
+      } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
+        setCameraError("Camera is already in use by another application or tab. Please close other camera apps and retry.");
+      } else {
+        setCameraError(
+          `Camera could not be started (${err.message || "access error"}). Please grant browser permissions or use file upload.`
+        );
+      }
       setIsCameraActive(false);
     }
   };
@@ -126,6 +224,17 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
     }
   };
 
+  // Visual Shutter Flash Effect & Audio
+  const [isShutterFlashing, setIsShutterFlashing] = useState<boolean>(false);
+
+  const triggerShutterFlashAndSound = () => {
+    soundEngine.playCameraShutter();
+    setIsShutterFlashing(true);
+    setTimeout(() => {
+      setIsShutterFlashing(false);
+    }, 350);
+  };
+
   // Snap Photo from Video Stream
   const capturePhoto = () => {
     if (!videoRef.current) return;
@@ -135,6 +244,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
     canvas.height = video.videoHeight || 480;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    // Trigger instant optical audio shutter click & flash
+    triggerShutterFlashAndSound();
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
@@ -156,6 +268,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
+        triggerShutterFlashAndSound();
         setSelectedImage(event.target.result as string);
         setMimeType(file.type || "image/jpeg");
         setErrorMsg(null);
@@ -172,6 +285,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
+          triggerShutterFlashAndSound();
           setSelectedImage(event.target.result as string);
           setMimeType(file.type || "image/jpeg");
           setErrorMsg(null);
@@ -188,6 +302,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
   // Select Sample Preset
   const handleSelectSample = (sample: SamplePreset) => {
     stopCamera();
+    triggerShutterFlashAndSound();
     setSelectedImage(sample.imageData);
     setMimeType("image/svg+xml");
     setNotes(sample.notes);
@@ -208,6 +323,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
       return;
     }
 
+    // Play high-tech scanner audio
+    soundEngine.playScanLaser();
     setIsAnalyzing(true);
     setErrorMsg(null);
     setAnalysisStep("Uploading specimen & parsing image features...");
@@ -244,6 +361,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
 
       const result: DiagnosticResult = await response.json();
       setIsAnalyzing(false);
+      // Play triumphant success chime
+      soundEngine.playSuccessChime();
       onDiagnosisComplete(result, selectedImage, notes);
     } catch (err: any) {
       console.error("Diagnosis error:", err);
@@ -254,45 +373,79 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
     }
   };
 
-  const filteredSamples = SAMPLE_VEGETABLES.filter((sample) => {
-    const isFruit =
-      sample.vegetable.toLowerCase().includes("apple") ||
-      sample.vegetable.toLowerCase().includes("banana") ||
-      sample.vegetable.toLowerCase().includes("orange") ||
-      sample.vegetable.toLowerCase().includes("strawberry") ||
-      sample.vegetable.toLowerCase().includes("grape");
-
-    if (sampleFilter === "Fruits") return isFruit;
-    if (sampleFilter === "Vegetables") return !isFruit;
-    return true;
-  });
-
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="bg-[#141d16] border border-emerald-900/30 rounded-2xl p-5 sm:p-6 shadow-sm">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <Sparkles className="w-3.5 h-3.5" /> 10+ Vegetable &amp; Fruit AI Diagnostic Lab
+      {/* Search Bar for Vegetable Name (Auto Opens Camera) */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <label htmlFor="input-vegetable-camera-search" className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+            <Search className="w-4 h-4 text-emerald-400" />
+            <span>Search Vegetable to Open Camera &amp; Scan</span>
+          </label>
+          <span className="text-[11px] text-emerald-400/90 font-medium">
+            Select any vegetable &bull; Camera auto-launches
           </span>
         </div>
+        <VegetableSearchBar
+          onSelectVegetableForCamera={handleLocalVegetableSearchSelect}
+          placeholder="Type vegetable name (e.g. Onion, Tomato, Potato, Garlic, Pepper, Eggplant) to open camera..."
+        />
+      </div>
+
+      {/* Header Banner */}
+      <div className="bg-[#141d16] border border-emerald-900/30 rounded-2xl p-4 sm:p-5 shadow-sm">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <Sparkles className="w-3.5 h-3.5" /> AI Vegetable Health &amp; Rot Diagnostic Lab
+            </span>
+          </div>
+          {cameraActiveVegetableName && (
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold animate-pulse">
+              <Camera className="w-3.5 h-3.5" />
+              <span>Camera active for {cameraActiveVegetableName}</span>
+            </div>
+          )}
+        </div>
         <h1 className="text-xl sm:text-2xl font-bold text-white mt-2">
-          AI Vegetable &amp; Fruit Disease Scanner
+          AI Vegetable Health &amp; Rot Scanner
         </h1>
         <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
-          Scan onions, tomatoes, potatoes, apples, bananas, citrus, strawberries, bell peppers, carrots, cabbages, grapes, and more for rot, fungal blight, bacterial wilt, storage disorders, and culinary safety.
+          Scan onions, tomatoes, potatoes, bell peppers, carrots, cabbages, cucumbers, eggplants, spinach, okra, and more for rot, fungal blight, bacterial wilt, storage disorders, and culinary edibility.
         </p>
       </div>
 
       {/* Main Scanner Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Image Viewport & Capture (7 cols) */}
-        <div className="lg:col-span-7 space-y-4">
+        <div className="lg:col-span-7 space-y-4" ref={cameraViewportRef}>
           <div
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             className="bg-[#141d16] border border-emerald-900/40 rounded-2xl p-4 min-h-[380px] sm:min-h-[420px] flex flex-col items-center justify-center relative overflow-hidden group shadow-inner"
           >
+            {/* Shutter Flash Animation Overlay */}
+            {isShutterFlashing && (
+              <div className="absolute inset-0 z-30 pointer-events-none animate-shutter-flash rounded-2xl" />
+            )}
+
+            {/* Laser Scanning Animation Overlay during Analysis */}
+            {isAnalyzing && (
+              <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden rounded-2xl">
+                <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_20px_#10b981] animate-laser-sweep" />
+                <div className="absolute inset-0 bg-emerald-500/5 animate-pulse" />
+                {/* Holographic corner reticles */}
+                <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-emerald-400" />
+                <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-emerald-400" />
+                <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-emerald-400" />
+                <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-emerald-400" />
+                {/* Centered scanning crosshair */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
+                  <div className="w-32 h-32 rounded-full border border-dashed border-emerald-400 animate-spin" style={{ animationDuration: '8s' }} />
+                </div>
+              </div>
+            )}
+
             {/* Live Camera View */}
             {isCameraActive ? (
               <div className="w-full h-full flex flex-col items-center justify-center relative">
@@ -340,14 +493,15 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
                 </div>
 
                 {/* Overlaid quick actions */}
-                <div className="absolute bottom-4 flex items-center gap-2">
+                <div className="absolute bottom-4 flex flex-wrap items-center justify-center gap-2 px-2">
                   <button
                     id="btn-retake-photo"
                     onClick={startCamera}
                     className="px-3 py-1.5 rounded-lg bg-[#141d16]/90 hover:bg-[#1a261d] text-slate-200 border border-emerald-900/40 text-xs font-medium flex items-center gap-1.5 backdrop-blur transition-all shadow"
+                    title="Open camera to take a new live photo"
                   >
                     <Camera className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Retake</span>
+                    <span>Scan Live</span>
                   </button>
                   <label
                     htmlFor="file-upload-overlay"
@@ -363,7 +517,17 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
                       className="hidden"
                     />
                   </label>
+                  <button
+                    id="btn-inspect-crop-api"
+                    onClick={() => setIsApiModalOpen(true)}
+                    className="px-3 py-1.5 rounded-lg bg-emerald-600/90 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 backdrop-blur transition-all shadow-md shadow-emerald-950/40"
+                    title="View Search & Agricultural Extension Intelligence"
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                    <span>Search</span>
+                  </button>
                 </div>
+
               </div>
             ) : (
               /* Empty state / dropzone */
@@ -381,11 +545,29 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
                   <button
                     id="btn-start-camera"
                     onClick={startCamera}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-2 shadow-md shadow-emerald-950/40 transition-all"
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-2 shadow-md shadow-emerald-950/40 transition-all active:scale-95"
                   >
                     <Camera className="w-4 h-4" />
-                    <span>Open Camera</span>
+                    <span>Open Live Camera</span>
                   </button>
+
+                  <label
+                    htmlFor="native-camera-capture"
+                    className="px-3.5 py-2 rounded-xl bg-[#1a261d] hover:bg-[#233327] text-emerald-300 font-medium text-xs flex items-center gap-2 border border-emerald-800/50 cursor-pointer transition-all shadow-sm"
+                    title="Take photo using your device's camera app"
+                  >
+                    <Camera className="w-4 h-4 text-emerald-400" />
+                    <span>Device Camera Snap</span>
+                    <input
+                      id="native-camera-capture"
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+
                   <label
                     htmlFor="file-upload-empty"
                     className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-white font-medium text-xs flex items-center gap-2 border border-stone-700 cursor-pointer transition-all"
@@ -413,33 +595,16 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
             </div>
           )}
 
-          {/* Sample Preset Selector with 12 Produce Types */}
+          {/* Sample Preset Selector with Vegetable Types */}
           <div className="bg-[#141d16] border border-emerald-900/30 rounded-2xl p-4">
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-emerald-400" /> 12 Preset Crop Specimen Presets
+                <Layers className="w-3.5 h-3.5 text-emerald-400" /> Preset Vegetable Specimen Presets
               </span>
-
-              {/* Sample Filter Tabs */}
-              <div className="flex items-center gap-1">
-                {(["All", "Vegetables", "Fruits"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setSampleFilter(tab)}
-                    className={`px-2.5 py-0.5 rounded-lg text-[11px] font-medium transition-all ${
-                      sampleFilter === tab
-                        ? "bg-emerald-600 text-white font-semibold"
-                        : "bg-[#0d130e] text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-              {filteredSamples.map((sample) => {
+              {SAMPLE_VEGETABLES.map((sample) => {
                 const isSelected = selectedImage === sample.imageData;
                 return (
                   <button
@@ -566,6 +731,17 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
               )}
             </button>
 
+            {/* Search & Google Extension Intelligence Quick Action Button */}
+            <button
+              id="btn-open-veg-api-data"
+              onClick={() => setIsApiModalOpen(true)}
+              className="w-full py-2.5 px-4 rounded-xl bg-[#0d130e] hover:bg-[#162219] text-emerald-300 border border-emerald-900/40 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm"
+            >
+              <Search className="w-4 h-4 text-emerald-400" />
+              <span>Search</span>
+            </button>
+
+
             {/* Progress Step Indicator during Scan */}
             {isAnalyzing && (
               <div className="p-3.5 bg-[#0d130e] border border-emerald-900/50 rounded-xl space-y-2">
@@ -592,6 +768,15 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onDiagnosisComplete })
           </div>
         </div>
       </div>
+
+      {/* Vegetable API & Google Data Explorer Modal */}
+      <VegetableApiModal
+        isOpen={isApiModalOpen}
+        onClose={() => setIsApiModalOpen(false)}
+        vegetableName={produceHint}
+        imagePreview={selectedImage || undefined}
+      />
     </div>
   );
 };
+

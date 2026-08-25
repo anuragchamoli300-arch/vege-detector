@@ -181,171 +181,7 @@ const potatoScabSvg = `
 </svg>
 `;
 
-// 5. Apple with Apple Scab & Bitter Rot
-const appleScabSvg = `
-<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="bgApple" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#26292b"/>
-      <stop offset="100%" stop-color="#121314"/>
-    </radialGradient>
-    <radialGradient id="appleRed" cx="35%" cy="32%" r="65%">
-      <stop offset="0%" stop-color="#ff5247"/>
-      <stop offset="40%" stop-color="#e01a24"/>
-      <stop offset="75%" stop-color="#990b14"/>
-      <stop offset="100%" stop-color="#540409"/>
-    </radialGradient>
-    <radialGradient id="scabLesion" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#242e18"/>
-      <stop offset="60%" stop-color="#161c0d"/>
-      <stop offset="90%" stop-color="#4a3e21"/>
-      <stop offset="100%" stop-color="#805b19"/>
-    </radialGradient>
-  </defs>
-  <rect width="600" height="600" fill="url(#bgApple)"/>
-  <ellipse cx="300" cy="515" rx="175" ry="30" fill="#080809" opacity="0.8"/>
-  <!-- Stem & Leaf -->
-  <path d="M 300 135 C 310 90 325 60 350 40" stroke="#5a3d1c" stroke-width="6" stroke-linecap="round" fill="none"/>
-  <path d="M 315 90 Q 360 70 380 95 Q 350 120 315 90 Z" fill="#4d7c0f" stroke="#365314" stroke-width="1.5"/>
-  <!-- Apple Body -->
-  <path d="M 300 135 C 340 135 445 155 450 290 C 455 425 365 480 300 480 C 235 480 145 425 150 290 C 155 155 260 135 300 135 Z" fill="url(#appleRed)" stroke="#420307" stroke-width="3"/>
-  <ellipse cx="230" cy="230" rx="30" ry="50" transform="rotate(-25 230 230)" fill="#ffffff" opacity="0.25"/>
-  <!-- Apple Scab & Bitter Rot Craters -->
-  <circle cx="340" cy="270" r="32" fill="url(#scabLesion)" stroke="#111609" stroke-width="2"/>
-  <circle cx="340" cy="270" r="20" stroke="#997a3d" stroke-width="1.5" stroke-dasharray="4,2" fill="none"/>
-  <circle cx="250" cy="340" r="26" fill="url(#scabLesion)" stroke="#111609" stroke-width="2"/>
-  <circle cx="380" cy="360" r="22" fill="url(#scabLesion)" stroke="#111609" stroke-width="1.5"/>
-  <circle cx="280" cy="400" r="16" fill="url(#scabLesion)"/>
-  <circle cx="340" cy="270" r="6" fill="#f472b6" opacity="0.75"/>
-  <circle cx="346" cy="265" r="4" fill="#f472b6" opacity="0.75"/>
-  <text x="30" y="565" fill="#ffffff" opacity="0.8" font-family="system-ui, sans-serif" font-size="18" font-weight="bold">Specimen: Honeycrisp Apple (Malus domestica) - Apple Scab & Rot</text>
-  <text x="30" y="585" fill="#eab308" font-family="system-ui, sans-serif" font-size="13">Visual Marker: Olive-black corky cracked scabs & salmon spore dots</text>
-</svg>
-`;
-
-// 6. Banana with Anthracnose & Crown Rot
-const bananaAnthracnoseSvg = `
-<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="bgBanana" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#1f2324"/>
-      <stop offset="100%" stop-color="#101213"/>
-    </radialGradient>
-    <linearGradient id="bananaYellow" x1="20%" y1="20%" x2="80%" y2="80%">
-      <stop offset="0%" stop-color="#ffe359"/>
-      <stop offset="50%" stop-color="#f5c723"/>
-      <stop offset="85%" stop-color="#cf980c"/>
-      <stop offset="100%" stop-color="#8a5f00"/>
-    </linearGradient>
-  </defs>
-  <rect width="600" height="600" fill="url(#bgBanana)"/>
-  <ellipse cx="300" cy="510" rx="200" ry="25" fill="#070809" opacity="0.8"/>
-  <!-- Crown stalk (Rotting brown) -->
-  <path d="M 120 160 C 130 130 145 120 165 125 C 160 145 150 175 140 190 Z" fill="#3b220d" stroke="#211205" stroke-width="2"/>
-  <!-- Banana Curve Body -->
-  <path d="M 140 180 C 220 200 380 230 460 360 C 490 410 495 440 480 455 C 465 470 435 460 395 410 C 310 300 200 240 135 200 Z" fill="url(#bananaYellow)" stroke="#664700" stroke-width="2.5"/>
-  <!-- Brown / Black Anthracnose Diamond Blotch Spots -->
-  <ellipse cx="320" cy="275" rx="28" ry="18" fill="#241407" stroke="#fb923c" stroke-width="1.2" transform="rotate(25 320 275)"/>
-  <circle cx="320" cy="275" r="7" fill="#fb923c" opacity="0.85"/>
-  <ellipse cx="390" cy="335" rx="34" ry="22" fill="#1c0f04" stroke="#fb923c" stroke-width="1.5" transform="rotate(35 390 335)"/>
-  <circle cx="390" cy="335" r="9" fill="#fb923c" opacity="0.9"/>
-  <ellipse cx="440" cy="390" rx="26" ry="16" fill="#1f1005" transform="rotate(45 440 390)"/>
-  <circle cx="230" cy="225" r="8" fill="#3b220d"/>
-  <circle cx="270" cy="245" r="10" fill="#3b220d"/>
-  <text x="30" y="565" fill="#ffffff" opacity="0.8" font-family="system-ui, sans-serif" font-size="18" font-weight="bold">Specimen: Cavendish Banana (Musa acuminata) - Anthracnose</text>
-  <text x="30" y="585" fill="#fb923c" font-family="system-ui, sans-serif" font-size="13">Visual Marker: Sunken black lesions with salmon-orange spore droplets</text>
-</svg>
-`;
-
-// 7. Orange with Citrus Canker & Green Mold
-const orangeCankerSvg = `
-<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="bgCitrus" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#242628"/>
-      <stop offset="100%" stop-color="#121315"/>
-    </radialGradient>
-    <radialGradient id="orangeRind" cx="38%" cy="35%" r="60%">
-      <stop offset="0%" stop-color="#ff9924"/>
-      <stop offset="50%" stop-color="#e66e00"/>
-      <stop offset="85%" stop-color="#ad4800"/>
-      <stop offset="100%" stop-color="#6e2a00"/>
-    </radialGradient>
-    <radialGradient id="greenMold" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#2d5236"/>
-      <stop offset="60%" stop-color="#1f3b26"/>
-      <stop offset="85%" stop-color="#e2e8f0"/>
-      <stop offset="100%" stop-color="#ff9924" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="600" height="600" fill="url(#bgCitrus)"/>
-  <ellipse cx="300" cy="510" rx="180" ry="30" fill="#080809" opacity="0.8"/>
-  <!-- Calyx button -->
-  <circle cx="300" cy="140" r="10" fill="#2d5016"/>
-  <circle cx="300" cy="330" r="175" fill="url(#orangeRind)" stroke="#521f00" stroke-width="3"/>
-  <ellipse cx="230" cy="250" rx="25" ry="40" transform="rotate(-30 230 250)" fill="#ffffff" opacity="0.2"/>
-  <!-- Green Mold (Penicillium digitatum) Spore Patch -->
-  <circle cx="360" cy="340" r="55" fill="url(#greenMold)"/>
-  <circle cx="360" cy="340" r="38" fill="#315c3c" stroke="#16301d" stroke-width="1.5"/>
-  <circle cx="360" cy="340" r="18" fill="#1e3b24"/>
-  <!-- Canker Crater Pustules with Yellow Halos -->
-  <circle cx="240" cy="350" r="18" fill="#542e0d" stroke="#facc15" stroke-width="4"/>
-  <circle cx="240" cy="350" r="8" fill="#261202"/>
-  <circle cx="280" cy="420" r="14" fill="#542e0d" stroke="#facc15" stroke-width="3.5"/>
-  <circle cx="200" cy="280" r="12" fill="#542e0d" stroke="#facc15" stroke-width="3"/>
-  <text x="30" y="565" fill="#ffffff" opacity="0.8" font-family="system-ui, sans-serif" font-size="18" font-weight="bold">Specimen: Valencia Orange (Citrus sinensis) - Canker & Green Mold</text>
-  <text x="30" y="585" fill="#4ade80" font-family="system-ui, sans-serif" font-size="13">Visual Marker: Corky crater pustules with yellow halos + green spore mold</text>
-</svg>
-`;
-
-// 8. Strawberry with Gray Mold (Botrytis cinerea)
-const strawberryGrayMoldSvg = `
-<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="bgBerry" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#232629"/>
-      <stop offset="100%" stop-color="#121314"/>
-    </radialGradient>
-    <radialGradient id="strawberryRed" cx="40%" cy="38%" r="60%">
-      <stop offset="0%" stop-color="#ff334b"/>
-      <stop offset="55%" stop-color="#d61129"/>
-      <stop offset="85%" stop-color="#8a0515"/>
-      <stop offset="100%" stop-color="#4d010b"/>
-    </radialGradient>
-    <radialGradient id="grayMold" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#64748b"/>
-      <stop offset="60%" stop-color="#475569"/>
-      <stop offset="90%" stop-color="#334155"/>
-      <stop offset="100%" stop-color="#1e293b" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="600" height="600" fill="url(#bgBerry)"/>
-  <ellipse cx="300" cy="510" rx="170" ry="28" fill="#080809" opacity="0.8"/>
-  <!-- Calyx Leaves -->
-  <g fill="#2d6a1b" stroke="#1b450e" stroke-width="2">
-    <path d="M 300 150 C 260 110 200 120 180 135 C 220 150 260 155 300 160 Z"/>
-    <path d="M 300 150 C 340 110 400 120 420 135 C 380 150 340 155 300 160 Z"/>
-    <path d="M 300 150 C 290 80 305 60 310 50 C 315 70 310 110 300 150 Z" fill="#1b450e"/>
-  </g>
-  <!-- Berry Heart Shape -->
-  <path d="M 300 160 C 430 160 450 300 390 420 C 340 480 300 500 300 500 C 300 500 260 480 210 420 C 150 300 170 160 300 160 Z" fill="url(#strawberryRed)" stroke="#4a020a" stroke-width="3"/>
-  <!-- Yellow Achenes / Seeds -->
-  <g fill="#fef08a" opacity="0.85">
-    <circle cx="250" cy="220" r="3"/><circle cx="280" cy="200" r="3"/><circle cx="320" cy="210" r="3"/><circle cx="350" cy="230" r="3"/>
-    <circle cx="230" cy="280" r="3"/><circle cx="260" cy="270" r="3"/><circle cx="280" cy="330" r="3"/><circle cx="250" cy="380" r="3"/>
-  </g>
-  <!-- Botrytis Gray Mold Fuzz on Shoulder & Side -->
-  <ellipse cx="360" cy="290" rx="65" ry="75" fill="url(#grayMold)"/>
-  <g fill="#94a3b8" opacity="0.9">
-    <circle cx="340" cy="260" r="8"/><circle cx="370" cy="270" r="10"/><circle cx="390" cy="290" r="9"/>
-    <circle cx="360" cy="310" r="11"/><circle cx="330" cy="300" r="8"/><circle cx="380" cy="330" r="8"/>
-  </g>
-  <text x="30" y="565" fill="#ffffff" opacity="0.8" font-family="system-ui, sans-serif" font-size="18" font-weight="bold">Specimen: Garden Strawberry (Fragaria) - Gray Mold (Botrytis)</text>
-  <text x="30" y="585" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">Visual Marker: Soft watery rot covered with dense smoky-gray velvet fuzz</text>
-</svg>
-`;
-
-// 9. Bell Pepper with Anthracnose & Bacterial Spot
+// 5. Bell Pepper with Anthracnose Rot
 const pepperAnthracnoseSvg = `
 <svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -378,7 +214,7 @@ const pepperAnthracnoseSvg = `
 </svg>
 `;
 
-// 10. Cabbage with Black Rot
+// 6. Cabbage with Black Rot
 const cabbageBlackRotSvg = `
 <svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -408,7 +244,7 @@ const cabbageBlackRotSvg = `
 </svg>
 `;
 
-// 11. Carrot with Cavity Spot
+// 7. Carrot with Cavity Spot
 const carrotCavitySpotSvg = `
 <svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -443,52 +279,94 @@ const carrotCavitySpotSvg = `
 </svg>
 `;
 
-// 12. Grapes with Downy Mildew & Bunch Rot
-const grapesDownyMildewSvg = `
+// 8. Cucumber with Powdery Mildew & Anthracnose
+const cucumberDiseaseSvg = `
 <svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="bgGrape" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#232528"/>
-      <stop offset="100%" stop-color="#111213"/>
+    <radialGradient id="bgCuke" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1f2520"/>
+      <stop offset="100%" stop-color="#101311"/>
     </radialGradient>
-    <radialGradient id="grapePurple" cx="35%" cy="35%" r="60%">
-      <stop offset="0%" stop-color="#a855f7"/>
-      <stop offset="50%" stop-color="#7e22ce"/>
-      <stop offset="85%" stop-color="#3b0764"/>
-      <stop offset="100%" stop-color="#1a0230"/>
+    <linearGradient id="cukeGreen" x1="20%" y1="20%" x2="80%" y2="80%">
+      <stop offset="0%" stop-color="#4ade80"/>
+      <stop offset="40%" stop-color="#16a34a"/>
+      <stop offset="80%" stop-color="#15803d"/>
+      <stop offset="100%" stop-color="#14532d"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#bgCuke)"/>
+  <ellipse cx="300" cy="510" rx="190" ry="28" fill="#080809" opacity="0.8"/>
+  <!-- Stem -->
+  <path d="M 170 190 Q 150 160 135 150" stroke="#15803d" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <!-- Cucumber Curved Body -->
+  <path d="M 170 190 C 230 200 370 230 450 330 C 480 370 485 410 460 435 C 430 460 380 430 330 360 C 270 280 200 240 160 210 Z" fill="url(#cukeGreen)" stroke="#0f381e" stroke-width="3"/>
+  <!-- Warty Bumps & Spines -->
+  <circle cx="220" cy="240" r="4" fill="#86efac"/>
+  <circle cx="280" cy="280" r="5" fill="#86efac"/>
+  <circle cx="340" cy="330" r="4" fill="#86efac"/>
+  <circle cx="400" cy="380" r="5" fill="#86efac"/>
+  <!-- Anthracnose Sunken Brown Craters with Spore Center -->
+  <ellipse cx="310" cy="310" rx="26" ry="18" fill="#2d1c0b" stroke="#ca8a04" stroke-width="1.5" transform="rotate(25 310 310)"/>
+  <circle cx="310" cy="310" r="6" fill="#fb923c" opacity="0.9"/>
+  <ellipse cx="390" cy="370" rx="22" ry="15" fill="#2d1c0b" stroke="#ca8a04" stroke-width="1.5" transform="rotate(35 390 370)"/>
+  <circle cx="390" cy="370" r="5" fill="#fb923c" opacity="0.9"/>
+  <!-- Powdery Mildew White Felt Patches -->
+  <ellipse cx="230" cy="230" rx="24" ry="14" fill="#ffffff" opacity="0.4" transform="rotate(-15 230 230)"/>
+  <ellipse cx="265" cy="260" rx="20" ry="12" fill="#ffffff" opacity="0.45" transform="rotate(10 265 260)"/>
+  <text x="30" y="565" fill="#ffffff" opacity="0.8" font-family="system-ui, sans-serif" font-size="18" font-weight="bold">Specimen: Cucumber (Cucumis sativus) - Anthracnose &amp; Mildew</text>
+  <text x="30" y="585" fill="#4ade80" font-family="system-ui, sans-serif" font-size="13">Visual Marker: Sunken leathery brown craters with salmon centers &amp; white felt</text>
+</svg>
+`;
+
+// 9. Eggplant / Brinjal with Phomopsis Fruit Rot
+const eggplantRotSvg = `
+<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bgEggplant" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#242129"/>
+      <stop offset="100%" stop-color="#121017"/>
+    </radialGradient>
+    <radialGradient id="eggplantPurple" cx="35%" cy="32%" r="65%">
+      <stop offset="0%" stop-color="#581c87"/>
+      <stop offset="45%" stop-color="#3b0764"/>
+      <stop offset="85%" stop-color="#1e053a"/>
+      <stop offset="100%" stop-color="#0e011c"/>
+    </radialGradient>
+    <radialGradient id="eggplantRot" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#382312"/>
+      <stop offset="60%" stop-color="#54361c"/>
+      <stop offset="90%" stop-color="#785028"/>
+      <stop offset="100%" stop-color="#3b0764" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect width="600" height="600" fill="url(#bgGrape)"/>
-  <ellipse cx="300" cy="515" rx="160" ry="25" fill="#080809" opacity="0.8"/>
-  <!-- Vine Stem & Grapevine Leaf -->
-  <path d="M 300 80 Q 300 130 300 160" stroke="#713f12" stroke-width="6" stroke-linecap="round" fill="none"/>
-  <path d="M 230 110 Q 300 70 370 110 Q 340 160 230 110 Z" fill="#65a30d" stroke="#365314" stroke-width="2"/>
-  <!-- Grape Cluster Berries -->
-  <g stroke="#1a0230" stroke-width="1.5">
-    <circle cx="260" cy="200" r="26" fill="url(#grapePurple)"/>
-    <circle cx="310" cy="190" r="28" fill="url(#grapePurple)"/>
-    <circle cx="355" cy="210" r="25" fill="url(#grapePurple)"/>
-    <circle cx="230" cy="250" r="25" fill="url(#grapePurple)"/>
-    <circle cx="280" cy="250" r="28" fill="url(#grapePurple)"/>
-    <circle cx="330" cy="260" r="27" fill="url(#grapePurple)"/>
-    <circle cx="375" cy="270" r="24" fill="url(#grapePurple)"/>
-    <!-- Shriveled rot berries with white downy mold -->
-    <ellipse cx="260" cy="310" rx="20" ry="26" fill="#382314" stroke="#64748b"/>
-    <circle cx="260" cy="310" r="8" fill="#e2e8f0" opacity="0.85"/>
-    <ellipse cx="310" cy="320" rx="18" ry="24" fill="#382314" stroke="#64748b"/>
-    <circle cx="310" cy="320" r="7" fill="#e2e8f0" opacity="0.85"/>
-    <circle cx="350" cy="330" r="22" fill="url(#grapePurple)"/>
-    <circle cx="290" cy="375" r="22" fill="url(#grapePurple)"/>
-    <ellipse cx="325" cy="385" rx="16" ry="20" fill="#382314"/>
-    <circle cx="305" cy="430" r="18" fill="url(#grapePurple)"/>
+  <rect width="600" height="600" fill="url(#bgEggplant)"/>
+  <ellipse cx="300" cy="515" rx="180" ry="32" fill="#080809" opacity="0.8"/>
+  <!-- Calyx & Stem -->
+  <path d="M 300 120 C 300 80 310 50 320 40" stroke="#3f6212" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <g fill="#4d7c0f" stroke="#365314" stroke-width="2">
+    <path d="M 300 125 L 240 180 L 270 140 Z"/>
+    <path d="M 300 125 L 360 180 L 330 140 Z"/>
+    <path d="M 300 125 L 300 190 L 315 140 Z"/>
   </g>
-  <text x="30" y="565" fill="#ffffff" opacity="0.8" font-family="system-ui, sans-serif" font-size="18" font-weight="bold">Specimen: Table Grapes (Vitis vinifera) - Downy Mildew & Bunch Rot</text>
-  <text x="30" y="585" fill="#c084fc" font-family="system-ui, sans-serif" font-size="13">Visual Marker: Shriveled brown leathery berries with white downy felt</text>
+  <!-- Eggplant Body -->
+  <path d="M 300 130 C 220 160 170 280 180 390 C 190 470 240 495 300 495 C 360 495 410 470 420 390 C 430 280 380 160 300 130 Z" fill="url(#eggplantPurple)" stroke="#1a0230" stroke-width="3"/>
+  <ellipse cx="240" cy="240" rx="25" ry="45" transform="rotate(-20 240 240)" fill="#ffffff" opacity="0.25"/>
+  <!-- Phomopsis Soft Rot Blotch -->
+  <ellipse cx="310" cy="360" rx="65" ry="55" fill="url(#eggplantRot)" stroke="#271404" stroke-width="2"/>
+  <!-- Concentric Rings of Tiny Black Pycnidia Pustules -->
+  <g fill="#18181b">
+    <circle cx="310" cy="360" r="5"/>
+    <circle cx="295" cy="345" r="4"/><circle cx="325" cy="345" r="4"/><circle cx="310" cy="380" r="4"/>
+    <circle cx="280" cy="335" r="3.5"/><circle cx="340" cy="335" r="3.5"/><circle cx="275" cy="370" r="3.5"/><circle cx="345" cy="370" r="3.5"/>
+    <circle cx="300" cy="400" r="3"/><circle cx="320" cy="400" r="3"/>
+  </g>
+  <text x="30" y="565" fill="#ffffff" opacity="0.8" font-family="system-ui, sans-serif" font-size="18" font-weight="bold">Specimen: Eggplant / Brinjal (Solanum melongena) - Phomopsis Rot</text>
+  <text x="30" y="585" fill="#c084fc" font-family="system-ui, sans-serif" font-size="13">Visual Marker: Sunken brown soft rot patch with concentric black pimples</text>
 </svg>
 `;
 
 export const SAMPLE_VEGETABLES: SamplePreset[] = [
-  // 1. ONION
+  // 1. ONION - BLACK MOLD
   {
     id: "sample-onion-black-mold",
     title: "Yellow Onion - Black Mold Rot",
@@ -499,7 +377,7 @@ export const SAMPLE_VEGETABLES: SamplePreset[] = [
     imageData: svgToDataUrl(onionBlackMoldSvg),
     notes: "Warm storage room (>28°C) with 80% humidity. Scales feel slightly soft.",
   },
-  // 2. RED ONION
+  // 2. RED ONION - PURPLE BLOTCH
   {
     id: "sample-onion-purple-blotch",
     title: "Red Onion - Purple Blotch Disease",
@@ -510,7 +388,7 @@ export const SAMPLE_VEGETABLES: SamplePreset[] = [
     imageData: svgToDataUrl(onionPurpleBlotchSvg),
     notes: "Field harvested after warm rainy spell. Neck tissue shows brownish-purple rings.",
   },
-  // 3. TOMATO
+  // 3. TOMATO - LATE BLIGHT
   {
     id: "sample-tomato-late-blight",
     title: "Tomato - Late Blight Fruit Rot",
@@ -521,7 +399,7 @@ export const SAMPLE_VEGETABLES: SamplePreset[] = [
     imageData: svgToDataUrl(tomatoLateBlightSvg),
     notes: "Greenhouse humid foggy conditions. Fruit rapidly turning brown and leathery.",
   },
-  // 4. POTATO
+  // 4. POTATO - COMMON SCAB
   {
     id: "sample-potato-scab",
     title: "Russet Potato - Common Scab",
@@ -532,51 +410,7 @@ export const SAMPLE_VEGETABLES: SamplePreset[] = [
     imageData: svgToDataUrl(potatoScabSvg),
     notes: "Harvested from alkaline sandy soil (pH 7.4). Pitted scab craters across tuber.",
   },
-  // 5. APPLE
-  {
-    id: "sample-apple-scab",
-    title: "Apple - Scab & Bitter Rot",
-    vegetable: "Apple",
-    conditionName: "Apple Scab (Venturia inaequalis)",
-    expectedHealth: "MODERATE_DISEASE",
-    description: "Olive-black corky cracked scabs and sunken saucer lesions with salmon-pink spore rings.",
-    imageData: svgToDataUrl(appleScabSvg),
-    notes: "Cool wet spring in orchard. Surface cracking and bitter rot spots.",
-  },
-  // 6. BANANA
-  {
-    id: "sample-banana-anthracnose",
-    title: "Banana - Anthracnose & Crown Rot",
-    vegetable: "Banana",
-    conditionName: "Banana Anthracnose (Colletotrichum musae)",
-    expectedHealth: "SEVERE_DAMAGE",
-    description: "Sunken black diamond lesions on peel with salmon-orange spore droplets and neck softening.",
-    imageData: svgToDataUrl(bananaAnthracnoseSvg),
-    notes: "Ripening room batch. Finger drop occurring at crown neck.",
-  },
-  // 7. ORANGE / CITRUS
-  {
-    id: "sample-orange-canker",
-    title: "Orange - Citrus Canker & Green Mold",
-    vegetable: "Orange",
-    conditionName: "Citrus Canker & Penicillium Mold",
-    expectedHealth: "SEVERE_DAMAGE",
-    description: "Raised volcano-like corky pustules with yellow halos plus green velvety spore mold.",
-    imageData: svgToDataUrl(orangeCankerSvg),
-    notes: "Storage crate showing green spore powder and rind canker scabs.",
-  },
-  // 8. STRAWBERRY
-  {
-    id: "sample-strawberry-gray-mold",
-    title: "Strawberry - Gray Mold (Botrytis)",
-    vegetable: "Strawberry",
-    conditionName: "Gray Mold (Botrytis cinerea)",
-    expectedHealth: "SPOILED_UNFIT",
-    description: "Soft watery fruit breakdown covered in dense, smoky-gray velvety fungal fuzz.",
-    imageData: svgToDataUrl(strawberryGrayMoldSvg),
-    notes: "Post-rain harvest in field punnet. Soft berry rapidly molding.",
-  },
-  // 9. BELL PEPPER
+  // 5. BELL PEPPER - ANTHRACNOSE
   {
     id: "sample-pepper-anthracnose",
     title: "Bell Pepper - Anthracnose Rot",
@@ -587,7 +421,7 @@ export const SAMPLE_VEGETABLES: SamplePreset[] = [
     imageData: svgToDataUrl(pepperAnthracnoseSvg),
     notes: "Standing crop pods turning soft and sunken after heavy rainfall.",
   },
-  // 10. CABBAGE
+  // 6. CABBAGE - BLACK ROT
   {
     id: "sample-cabbage-black-rot",
     title: "Cabbage - Black Rot (Xanthomonas)",
@@ -598,7 +432,7 @@ export const SAMPLE_VEGETABLES: SamplePreset[] = [
     imageData: svgToDataUrl(cabbageBlackRotSvg),
     notes: "Field cabbage showing yellowing margins and blackened vein network.",
   },
-  // 11. CARROT
+  // 7. CARROT - CAVITY SPOT
   {
     id: "sample-carrot-cavity-spot",
     title: "Carrot - Cavity Spot Slits",
@@ -609,15 +443,29 @@ export const SAMPLE_VEGETABLES: SamplePreset[] = [
     imageData: svgToDataUrl(carrotCavitySpotSvg),
     notes: "Heavy clay soil with high winter moisture. Superficial brown slits.",
   },
-  // 12. GRAPES
+  // 8. CUCUMBER - ANTHRACNOSE & MILDEW
   {
-    id: "sample-grapes-downy-mildew",
-    title: "Grapes - Downy Mildew & Bunch Rot",
-    vegetable: "Grapes",
-    conditionName: "Grapevine Downy Mildew",
+    id: "sample-cucumber-mildew",
+    title: "Cucumber - Anthracnose & Powdery Mildew",
+    vegetable: "Cucumber",
+    conditionName: "Cucurbit Anthracnose & Powdery Felt",
+    expectedHealth: "MODERATE_DISEASE",
+    description: "Sunken leathery circular craters on fruit rind with powdery white fungal felt on neck.",
+    imageData: svgToDataUrl(cucumberDiseaseSvg),
+    notes: "Greenhouse trellis cucumber. High humidity with morning dew.",
+  },
+  // 9. EGGPLANT / BRINJAL - PHOMOPSIS ROT
+  {
+    id: "sample-eggplant-phomopsis",
+    title: "Eggplant - Phomopsis Fruit Rot",
+    vegetable: "Eggplant",
+    conditionName: "Phomopsis Blight & Fruit Rot",
     expectedHealth: "SEVERE_DAMAGE",
-    description: "Shriveled hard brown leathery berries with white downy fungal spore coating.",
-    imageData: svgToDataUrl(grapesDownyMildewSvg),
-    notes: "Vineyard block after rain spell. Bunch berries turning into dry leathery mummies.",
+    description: "Sunken circular brown water-soaked soft rot lesion covered in concentric black pycnidia pustules.",
+    imageData: svgToDataUrl(eggplantRotSvg),
+    notes: "Garden bed during warm humid monsoon weather. Calyx turning brown.",
   },
 ];
+
+export const SAMPLE_PRESETS = SAMPLE_VEGETABLES;
+

@@ -1,6 +1,6 @@
 {
-  "name": "Vegetable Problem Scanner & Health Tracker",
-  "description": "AI-powered vegetable and fruit problem detector, disease scanner, and crop health tracker for 10+ produce varieties with instant camera scanning, complete disease descriptions, treatment plans, and admin security.",
+  "name": "VEGES TRACKER",
+  "description": "AI-powered vegetable disease scanner, crop health tracker, and botanical pathology diagnostic system for onions, tomatoes, potatoes, bell peppers, cabbage, carrots, cucumbers, and other vegetables.",
   "requestFramePermissions": [
     "camera"
   ],

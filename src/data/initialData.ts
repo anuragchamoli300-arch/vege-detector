@@ -1,12 +1,16 @@
 import { TrackedScan } from "../types";
 import { SAMPLE_VEGETABLES } from "./sampleImages";
 
+const getImage = (idx: number): string => {
+  return SAMPLE_VEGETABLES[idx]?.imageData || SAMPLE_VEGETABLES[0]?.imageData || "";
+};
+
 export const INITIAL_TRACKED_SCANS: TrackedScan[] = [
   // 1. ONION
   {
     id: "scan-onion-lot-401",
     timestamp: new Date(Date.now() - 3600000 * 24 * 2).toISOString(),
-    imagePreview: SAMPLE_VEGETABLES[0].imageData,
+    imagePreview: getImage(0),
     vegetableName: "Yellow Onion (Allium cepa)",
     primaryIssue: "Black Mold (Aspergillus niger)",
     healthStatus: "SEVERE_DAMAGE",
@@ -70,7 +74,7 @@ export const INITIAL_TRACKED_SCANS: TrackedScan[] = [
   {
     id: "scan-tomato-blight-203",
     timestamp: new Date(Date.now() - 3600000 * 24 * 1.5).toISOString(),
-    imagePreview: SAMPLE_VEGETABLES[2].imageData,
+    imagePreview: getImage(2),
     vegetableName: "Tomato (Solanum lycopersicum)",
     primaryIssue: "Late Blight (Phytophthora infestans)",
     healthStatus: "SPOILED_UNFIT",
@@ -128,74 +132,11 @@ export const INITIAL_TRACKED_SCANS: TrackedScan[] = [
     },
   },
 
-  // 3. APPLE
-  {
-    id: "scan-apple-scab-305",
-    timestamp: new Date(Date.now() - 3600000 * 24 * 3).toISOString(),
-    imagePreview: SAMPLE_VEGETABLES[4].imageData,
-    vegetableName: "Apple (Malus domestica)",
-    primaryIssue: "Apple Scab & Bitter Rot",
-    healthStatus: "MODERATE_DISEASE",
-    severityLevel: "Medium",
-    trackingState: "Treating",
-    batchOrLocation: "Orchard Block C (Honeycrisp)",
-    userNotes: "Applied liquid sulfur foliar spray after wet spring rainfall. Monitoring fruit sizing.",
-    diagnosis: {
-      vegetableName: "Honeycrisp Apple",
-      scientificName: "Malus domestica",
-      plantPart: "Fruit Rind & Flesh",
-      healthStatus: "MODERATE_DISEASE",
-      primaryIssue: "Apple Scab & Bitter Rot",
-      pathogenType: "Fungal",
-      confidenceScore: 94,
-      severityLevel: "Medium",
-      summary: "Olive-black corky scabs on outer skin with surface cracking and concentric salmon-pink spore dots.",
-      identifiedSymptoms: [
-        "Velvety olive-black corky crater scabs on fruit skin",
-        "Small surface fissures and skin distortion",
-        "Concentric rings of salmon-pink spore tendrils in moist conditions",
-      ],
-      probableCauses: [
-        "Extended spring rain spells (>10 hours leaf wetness at 15°C)",
-        "Overwintering fungal spores on unraked orchard leaf mulch",
-      ],
-      edibilitySafety: {
-        isSafeToEat: true,
-        rating: "Edible with Trim (Peel affected outer layer)",
-        guidance: "Peel away corky surface scabs; internal white fruit flesh is crisp, sweet, and safe to eat.",
-      },
-      actionPlan: {
-        immediateAction: "Prune dense inner water sprouts to open tree canopy to direct sunlight.",
-        organicRemedies: [
-          "Spray lime sulfur or wettable sulfur during pink bud and petal fall",
-          "Rake and compost fallen leaf debris in autumn",
-        ],
-        chemicalTreatments: [
-          "Fungicides: Captan (2 g/L) or Difenoconazole applied at green tip through petal fall",
-        ],
-        storageAndPreservation: [
-          "Store sorted apples at 0.5°C - 2°C with 90% RH; do not store cracked fruit for long-term hold",
-        ],
-        preventiveMeasures: [
-          "Plant scab-resistant cultivars (Liberty, GoldRush, Enterprise)",
-        ],
-      },
-      differentialDiagnoses: [
-        {
-          condition: "Sooty Blotch (Gloeodes pomigena)",
-          likelihood: "Low",
-          distinction: "Sooty blotch forms smudgy dark superficial film that wipes off, whereas scab creates corky cracked craters.",
-        },
-      ],
-      marketImpact: "Downgraded from Fresh Grade A to Processing/Cider class due to skin blemishes.",
-    },
-  },
-
-  // 4. POTATO
+  // 3. POTATO
   {
     id: "scan-potato-scab-112",
     timestamp: new Date(Date.now() - 3600000 * 24 * 4).toISOString(),
-    imagePreview: SAMPLE_VEGETABLES[3].imageData,
+    imagePreview: getImage(3),
     vegetableName: "Potato (Solanum tuberosum)",
     primaryIssue: "Common Scab (Streptomyces scabies)",
     healthStatus: "MILD_ISSUE",
@@ -254,200 +195,11 @@ export const INITIAL_TRACKED_SCANS: TrackedScan[] = [
     },
   },
 
-  // 5. STRAWBERRY
-  {
-    id: "scan-strawberry-botrytis-502",
-    timestamp: new Date(Date.now() - 3600000 * 8).toISOString(),
-    imagePreview: SAMPLE_VEGETABLES[7].imageData,
-    vegetableName: "Strawberry (Fragaria × ananassa)",
-    primaryIssue: "Gray Mold (Botrytis cinerea)",
-    healthStatus: "SPOILED_UNFIT",
-    severityLevel: "Critical",
-    trackingState: "Discarded",
-    batchOrLocation: "Field Bed #4 (South Mulch)",
-    userNotes: "Culled 8 baskets after 2 days of rain. Disposed of infected berries in sealed bags.",
-    diagnosis: {
-      vegetableName: "Garden Strawberry fruit",
-      scientificName: "Fragaria × ananassa",
-      plantPart: "Ripe Receptacle & Calyx",
-      healthStatus: "SPOILED_UNFIT",
-      primaryIssue: "Gray Mold (Botrytis cinerea)",
-      pathogenType: "Fungal",
-      confidenceScore: 98,
-      severityLevel: "Critical",
-      summary: "Soft watery fruit breakdown covered in a dense velvety smoky-gray spore coat.",
-      identifiedSymptoms: [
-        "Brown water-soaked soft rot starting at calyx neck",
-        "Dense smoky-gray velvety fungal fuzz blanket",
-        "Loss of berry firmness and rapid liquefaction",
-      ],
-      probableCauses: [
-        "Prolonged rain and high relative humidity (>90% RH) during peak berry ripening",
-        "Berries in direct contact with wet mulch or decaying leaves",
-      ],
-      edibilitySafety: {
-        isSafeToEat: false,
-        rating: "Do Not Consume / Discard",
-        guidance: "Unsafe to consume. Fungal hyphae thoroughly degrade cellular structure and generate spore mycotoxins.",
-      },
-      actionPlan: {
-        immediateAction: "Pick and cull all moldy berries daily to stop airborne spore clouds.",
-        organicRemedies: [
-          "Bio-fungicide spray containing Bacillus subtilis or Aureobasidium pullulans",
-          "Apply potassium bicarbonate during early bloom",
-        ],
-        chemicalTreatments: [
-          "Fungicide sprays at bloom: Fenhexamid or Cyprodinil + Fludioxonil",
-        ],
-        storageAndPreservation: [
-          "Cool harvested berries to 0°C - 2°C within 1 hour of picking to arrest fungal growth",
-        ],
-        preventiveMeasures: [
-          "Maintain fresh clean straw mulch to keep berries elevated above damp soil",
-        ],
-      },
-      differentialDiagnoses: [
-        {
-          condition: "Rhizopus Rot / Leak (Rhizopus stolonifer)",
-          likelihood: "Low",
-          distinction: "Rhizopus produces coarse whiskery black-headed mold and copious juice leakage in hot weather.",
-        },
-      ],
-      marketImpact: "100% loss for affected fruit; rapid harvest and cooling required for remainder of crop.",
-    },
-  },
-
-  // 6. BANANA
-  {
-    id: "scan-banana-anthracnose-601",
-    timestamp: new Date(Date.now() - 3600000 * 24 * 1).toISOString(),
-    imagePreview: SAMPLE_VEGETABLES[5].imageData,
-    vegetableName: "Banana (Musa acuminata)",
-    primaryIssue: "Banana Anthracnose (Colletotrichum musae)",
-    healthStatus: "SEVERE_DAMAGE",
-    severityLevel: "High",
-    trackingState: "Treating",
-    batchOrLocation: "Ripening Room #2",
-    userNotes: "Treated fruit crowns with hot water dip. Adjusted room humidity down to 75%.",
-    diagnosis: {
-      vegetableName: "Cavendish Banana hand",
-      scientificName: "Musa acuminata",
-      plantPart: "Fruit Peel & Crown Stalk",
-      healthStatus: "SEVERE_DAMAGE",
-      primaryIssue: "Banana Anthracnose (Colletotrichum musae)",
-      pathogenType: "Fungal",
-      confidenceScore: 95,
-      severityLevel: "High",
-      summary: "Sunken black diamond lesions on peel with salmon-orange spore droplets and neck softening.",
-      identifiedSymptoms: [
-        "Sunken dark brown to black peel diamond spots",
-        "Bright salmon-orange gelatinous spore slime",
-        "Crown neck softening leading to finger detachment",
-      ],
-      probableCauses: [
-        "Warm, humid ripening conditions (26°C, RH >85%)",
-        "Skin abrasions and bruising during de-handing and packaging",
-      ],
-      edibilitySafety: {
-        isSafeToEat: true,
-        rating: "Edible with Trim (Peel affected outer layer)",
-        guidance: "Peel is heavily blemished, but if inner pulp is firm and creamy white, it is safe and sweet. Discard if black rot penetrates deep into flesh.",
-      },
-      actionPlan: {
-        immediateAction: "Perform post-harvest hot water immersion (50°C for 2-3 minutes).",
-        organicRemedies: [
-          "Apply protective food-grade chitosan bio-coating",
-          "Wash hands in chlorinated clean water",
-        ],
-        chemicalTreatments: [
-          "Post-harvest crown treatment with Thiabendazole or Imazalil",
-        ],
-        storageAndPreservation: [
-          "Maintain green banana storage at 13°C - 14°C (never below 12°C to prevent chilling injury)",
-        ],
-        preventiveMeasures: [
-          "Sleeve bunches in field with perforated polyethylene bags",
-        ],
-      },
-      differentialDiagnoses: [
-        {
-          condition: "Cigar End Rot (Verticillium theobromae)",
-          likelihood: "Low",
-          distinction: "Cigar end rot forms dry ash-gray rot restricted to the flower tip of the fruit.",
-        },
-      ],
-      marketImpact: "25% retail discount required due to cosmetic peel blemishes; pulp quality remains good.",
-    },
-  },
-
-  // 7. ORANGE
-  {
-    id: "scan-orange-canker-704",
-    timestamp: new Date(Date.now() - 3600000 * 24 * 5).toISOString(),
-    imagePreview: SAMPLE_VEGETABLES[6].imageData,
-    vegetableName: "Valencia Orange (Citrus sinensis)",
-    primaryIssue: "Citrus Canker & Green Mold",
-    healthStatus: "SEVERE_DAMAGE",
-    severityLevel: "High",
-    trackingState: "Quarantined",
-    batchOrLocation: "Packing House Crate #18",
-    userNotes: "Quarantined crate. Sanitized packing conveyor with chlorine dioxide solution.",
-    diagnosis: {
-      vegetableName: "Valencia Orange fruit",
-      scientificName: "Citrus sinensis",
-      plantPart: "Fruit Rind & Periderm",
-      healthStatus: "SEVERE_DAMAGE",
-      primaryIssue: "Citrus Canker & Green Mold",
-      pathogenType: "Fungal",
-      confidenceScore: 97,
-      severityLevel: "High",
-      summary: "Raised volcano-like corky pustules with yellow halos plus green velvety spore mold patch.",
-      identifiedSymptoms: [
-        "Raised volcano-like corky rind scabs surrounded by oily yellow halos",
-        "Soft water-soaked peel spot rapidly covered in olive-green spore dust",
-        "Peel collapse and spore clouding upon contact",
-      ],
-      probableCauses: [
-        "Mechanical clipping wounds during harvest combined with humid packing box transit",
-        "Windblown rain spreading Xanthomonas bacteria in grove prior to harvest",
-      ],
-      edibilitySafety: {
-        isSafeToEat: false,
-        rating: "Do Not Consume / Discard",
-        guidance: "Discard molded oranges immediately to prevent spore clouds from infecting adjacent healthy fruit.",
-      },
-      actionPlan: {
-        immediateAction: "Remove and bag all green mold fruit to stop airborne spore spread.",
-        organicRemedies: [
-          "Wash fruit with 2% food-grade sodium bicarbonate (baking soda) dip",
-          "Apply bio-control yeast (Candida oleophila)",
-        ],
-        chemicalTreatments: [
-          "Post-harvest wax coating with Imazalil or Fludioxonil",
-        ],
-        storageAndPreservation: [
-          "Store citrus at 4°C - 8°C with 85-90% RH to retard spore germination",
-        ],
-        preventiveMeasures: [
-          "Harvest with cotton gloves using blunt clippers; avoid fingernail scrapes",
-        ],
-      },
-      differentialDiagnoses: [
-        {
-          condition: "Blue Mold (Penicillium italicum)",
-          likelihood: "Medium",
-          distinction: "Blue mold forms bright blue-colored spores with a narrower white mycelial margin.",
-        },
-      ],
-      marketImpact: "100% loss of infected fruit; essential to preserve remaining harvest through sanitation.",
-    },
-  },
-
-  // 8. BELL PEPPER
+  // 4. BELL PEPPER
   {
     id: "scan-pepper-anthracnose-802",
     timestamp: new Date(Date.now() - 3600000 * 24 * 2.5).toISOString(),
-    imagePreview: SAMPLE_VEGETABLES[8].imageData,
+    imagePreview: getImage(4),
     vegetableName: "Bell Pepper (Capsicum annuum)",
     primaryIssue: "Pepper Anthracnose (Colletotrichum)",
     healthStatus: "SEVERE_DAMAGE",
@@ -505,11 +257,11 @@ export const INITIAL_TRACKED_SCANS: TrackedScan[] = [
     },
   },
 
-  // 9. CABBAGE
+  // 5. CABBAGE
   {
     id: "scan-cabbage-blackrot-901",
     timestamp: new Date(Date.now() - 3600000 * 24 * 3.5).toISOString(),
-    imagePreview: SAMPLE_VEGETABLES[9].imageData,
+    imagePreview: getImage(5),
     vegetableName: "Cabbage (Brassica oleracea)",
     primaryIssue: "Black Rot of Crucifers",
     healthStatus: "MODERATE_DISEASE",
@@ -567,11 +319,11 @@ export const INITIAL_TRACKED_SCANS: TrackedScan[] = [
     },
   },
 
-  // 10. CARROT
+  // 6. CARROT
   {
     id: "scan-carrot-cavity-1001",
     timestamp: new Date(Date.now() - 3600000 * 24 * 6).toISOString(),
-    imagePreview: SAMPLE_VEGETABLES[10].imageData,
+    imagePreview: getImage(6),
     vegetableName: "Carrot (Daucus carota)",
     primaryIssue: "Cavity Spot (Pythium sulcatum)",
     healthStatus: "MILD_ISSUE",
@@ -627,6 +379,131 @@ export const INITIAL_TRACKED_SCANS: TrackedScan[] = [
         },
       ],
       marketImpact: "Excellent for fresh peeled market and home kitchen use.",
+    },
+  },
+
+  // 7. CUCUMBER
+  {
+    id: "scan-cucumber-mildew-1101",
+    timestamp: new Date(Date.now() - 3600000 * 24 * 1).toISOString(),
+    imagePreview: getImage(7),
+    vegetableName: "Cucumber (Cucumis sativus)",
+    primaryIssue: "Cucurbit Anthracnose & Mildew",
+    healthStatus: "MODERATE_DISEASE",
+    severityLevel: "Medium",
+    trackingState: "Treating",
+    batchOrLocation: "High Tunnel Greenhouse #2",
+    userNotes: "Detected sunken lesions on fruit rind with powdery white patches on stems.",
+    diagnosis: {
+      vegetableName: "English Cucumber fruit",
+      scientificName: "Cucumis sativus",
+      plantPart: "Fruit Rind & Petiole",
+      healthStatus: "MODERATE_DISEASE",
+      primaryIssue: "Cucurbit Anthracnose & Mildew",
+      pathogenType: "Fungal",
+      confidenceScore: 95,
+      severityLevel: "Medium",
+      summary: "Sunken leathery circular craters on fruit rind with white powdery fungal felt on neck.",
+      identifiedSymptoms: [
+        "Sunken circular lesions with dark brown margins on fruit skin",
+        "Powdery talcum-like white fungal coating on stem and foliage",
+        "Water-soaked rind spots exuding amber sap droplets",
+      ],
+      probableCauses: [
+        "Elevated humidity (>85%) combined with warm greenhouse temperatures (24-28°C)",
+        "Poor airflow through trellis canopy",
+      ],
+      edibilitySafety: {
+        isSafeToEat: true,
+        rating: "Edible with Trim (Peel affected outer layer)",
+        guidance: "Peel away rind craters; unaffected crisp white flesh is completely edible. Discard if fruit becomes soft or bitter.",
+      },
+      actionPlan: {
+        immediateAction: "Prune heavily diseased leaves and increase ventilation fan speed.",
+        organicRemedies: [
+          "Potassium bicarbonate (3 g/L) foliar spray",
+          "Neem oil emulsion (0.5%) applied weekly",
+        ],
+        chemicalTreatments: [
+          "Azoxystrobin or Chlorothalonil foliar spray",
+        ],
+        storageAndPreservation: [
+          "Store at 10°C - 12°C with 90% RH (avoid storing below 10°C to prevent chilling injury)",
+        ],
+        preventiveMeasures: [
+          "Space trellis rows for morning sunlight and swift leaf drying",
+        ],
+      },
+      differentialDiagnoses: [
+        {
+          condition: "Gummy Stem Blight (Didymella bryoniae)",
+          likelihood: "Low",
+          distinction: "Gummy stem blight features black fruiting bodies in stem splits oozing characteristic gummy brown sap.",
+        },
+      ],
+      marketImpact: "Grade B classification; marketable for fresh local consumption after sorting.",
+    },
+  },
+
+  // 8. EGGPLANT
+  {
+    id: "scan-eggplant-phomopsis-1201",
+    timestamp: new Date(Date.now() - 3600000 * 18).toISOString(),
+    imagePreview: getImage(8),
+    vegetableName: "Eggplant (Solanum melongena)",
+    primaryIssue: "Phomopsis Blight & Fruit Rot",
+    healthStatus: "SEVERE_DAMAGE",
+    severityLevel: "High",
+    trackingState: "Quarantined",
+    batchOrLocation: "Field Block 3 (Black Beauty)",
+    userNotes: "Large brown soft rot patch observed with concentric ring of black pimples.",
+    diagnosis: {
+      vegetableName: "Black Beauty Eggplant",
+      scientificName: "Solanum melongena",
+      plantPart: "Fruit Rind & Flesh",
+      healthStatus: "SEVERE_DAMAGE",
+      primaryIssue: "Phomopsis Blight & Fruit Rot",
+      pathogenType: "Fungal",
+      confidenceScore: 96,
+      severityLevel: "High",
+      summary: "Sunken circular brown water-soaked soft rot lesion covered in concentric black pycnidia pustules.",
+      identifiedSymptoms: [
+        "Large sunken circular brown soft rot crater on fruit side",
+        "Concentric rings of tiny black pimples (pycnidia)",
+        "Spongy watery collapse of inner spongy pulp",
+      ],
+      probableCauses: [
+        "Prolonged rainy conditions (27-32°C) with water splashing soil spores onto hanging fruit",
+      ],
+      edibilitySafety: {
+        isSafeToEat: false,
+        rating: "Do Not Consume / Discard",
+        guidance: "Discard rotting eggplants; the fungus turns internal pulp spongy, watery, and bitter.",
+      },
+      actionPlan: {
+        immediateAction: "Harvest and destroy all rotting fruits to prevent spore dispersal.",
+        organicRemedies: [
+          "Copper oxychloride (2.5 g/L) foliar spray",
+          "Bio-fungicide Trichoderma viride root drench",
+        ],
+        chemicalTreatments: [
+          "Mancozeb or Carbendazim foliar application",
+        ],
+        storageAndPreservation: [
+          "Store sound eggplants at 10°C - 12°C with 90% RH",
+        ],
+        preventiveMeasures: [
+          "Mulch beds with straw to prevent rain-splash inoculum from reaching lower canopy",
+        ],
+      },
+      differentialDiagnoses: [
+        {
+          condition: "Anthracnose Fruit Rot (Colletotrichum melongenae)",
+          likelihood: "Low",
+          distinction: "Anthracnose produces salmon-pink spore masses in humid conditions rather than dry black pycnidia pimples.",
+        },
+      ],
+      marketImpact: "Total loss for infected fruit; sound fruits on same bush remain marketable.",
     },
   },
 ];

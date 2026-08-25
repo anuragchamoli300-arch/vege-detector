@@ -8,3 +8,60 @@
   }
 }
 
+@keyframes shutterFlash {
+  0% {
+    opacity: 0.95;
+    background-color: rgba(255, 255, 255, 0.95);
+  }
+  40% {
+    opacity: 0.8;
+    background-color: rgba(16, 185, 129, 0.5);
+  }
+  100% {
+    opacity: 0;
+    background-color: transparent;
+  }
+}
+
+@keyframes laserSweep {
+  0% {
+    top: 0%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 100%;
+    opacity: 1;
+  }
+  100% {
+    top: 0%;
+    opacity: 0.8;
+  }
+}
+
+@keyframes radarPulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+.animate-shutter-flash {
+  animation: shutterFlash 0.35s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+.animate-laser-sweep {
+  animation: laserSweep 2s ease-in-out infinite;
+}
+
+.animate-radar-pulse {
+  animation: radarPulse 2.5s ease-in-out infinite;
+}
+

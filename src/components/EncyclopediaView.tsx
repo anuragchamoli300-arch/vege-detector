@@ -24,34 +24,29 @@ interface EncyclopediaViewProps {
   onSelectCropForScanning?: (cropName: string) => void;
 }
 
-const CROP_CATEGORIES = ["All Crops", "Vegetables", "Fruits"] as const;
-
 const FAMILIES: ("All Families" | VegetableFamily)[] = [
   "All Families",
   "Allium (Onion, Garlic, Leek)",
-  "Solanaceae (Tomato, Potato, Pepper)",
-  "Rosaceae Fruits (Apple, Strawberry, Peach)",
-  "Citrus & Tropical (Orange, Banana, Lemon)",
-  "Brassica (Cabbage, Broccoli, Cauliflower)",
-  "Root & Tuber (Carrot, Radish, Beet)",
-  "Vitaceae (Grapes & Berries)",
-  "Cucurbit (Cucumber, Zucchini, Melon)",
+  "Solanaceae (Tomato, Potato, Pepper, Eggplant)",
+  "Brassica (Cabbage, Broccoli, Cauliflower, Kale)",
+  "Root & Tuber (Carrot, Radish, Beetroot, Turnip)",
+  "Cucurbit (Cucumber, Squash, Pumpkin, Zucchini)",
+  "Leafy Greens (Spinach, Lettuce, Chard)",
+  "Malvaceae (Okra, Hibiscus)",
 ];
 
 const POPULAR_CROPS = [
-  { name: "All", label: "All Crops" },
-  { name: "Onion", label: "🧅 Onion / Garlic", type: "Vegetables" },
-  { name: "Tomato", label: "🍅 Tomato", type: "Vegetables" },
-  { name: "Potato", label: "🥔 Potato", type: "Vegetables" },
-  { name: "Apple", label: "🍎 Apple", type: "Fruits" },
-  { name: "Banana", label: "🍌 Banana", type: "Fruits" },
-  { name: "Orange", label: "🍊 Orange / Citrus", type: "Fruits" },
-  { name: "Strawberry", label: "🍓 Strawberry", type: "Fruits" },
-  { name: "Bell Pepper", label: "🫑 Bell Pepper / Chili", type: "Vegetables" },
-  { name: "Cabbage", label: "🥬 Cabbage / Broccoli", type: "Vegetables" },
-  { name: "Carrot", label: "🥕 Carrot", type: "Vegetables" },
-  { name: "Grapes", label: "🍇 Grapes", type: "Fruits" },
-  { name: "Cucumber", label: "🥒 Cucumber / Squash", type: "Vegetables" },
+  { name: "All", label: "All Vegetables" },
+  { name: "Onion", label: "🧅 Onion / Garlic" },
+  { name: "Tomato", label: "🍅 Tomato" },
+  { name: "Potato", label: "🥔 Potato" },
+  { name: "Bell Pepper", label: "🫑 Bell Pepper / Chili" },
+  { name: "Cabbage", label: "🥬 Cabbage / Broccoli" },
+  { name: "Carrot", label: "🥕 Carrot / Radish" },
+  { name: "Cucumber", label: "🥒 Cucumber / Squash" },
+  { name: "Eggplant", label: "🍆 Eggplant / Brinjal" },
+  { name: "Spinach", label: "🍃 Spinach / Greens" },
+  { name: "Okra", label: "🌱 Okra / Bhindi" },
 ];
 
 export const EncyclopediaView: React.FC<EncyclopediaViewProps> = ({
@@ -59,41 +54,12 @@ export const EncyclopediaView: React.FC<EncyclopediaViewProps> = ({
   onSelectCropForScanning,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<"All Crops" | "Vegetables" | "Fruits">("All Crops");
   const [selectedFamily, setSelectedFamily] = useState<"All Families" | VegetableFamily>("All Families");
   const [selectedCrop, setSelectedCrop] = useState<string>("All");
   const [selectedPathogen, setSelectedPathogen] = useState<string>("All");
   const [expandedId, setExpandedId] = useState<string | null>(ENCYCLOPEDIA_DISEASES[0]?.id || null);
 
   const filteredDiseases = ENCYCLOPEDIA_DISEASES.filter((item) => {
-    // Category check (Fruits vs Vegetables)
-    let matchesCategory = true;
-    if (selectedCategory === "Fruits") {
-      matchesCategory =
-        item.family.includes("Rosaceae") ||
-        item.family.includes("Citrus") ||
-        item.family.includes("Vitaceae") ||
-        item.vegetableType.toLowerCase().includes("apple") ||
-        item.vegetableType.toLowerCase().includes("banana") ||
-        item.vegetableType.toLowerCase().includes("orange") ||
-        item.vegetableType.toLowerCase().includes("strawberry") ||
-        item.vegetableType.toLowerCase().includes("grape");
-    } else if (selectedCategory === "Vegetables") {
-      matchesCategory =
-        item.family.includes("Allium") ||
-        item.family.includes("Solanaceae") ||
-        item.family.includes("Brassica") ||
-        item.family.includes("Root") ||
-        item.family.includes("Cucurbit") ||
-        item.vegetableType.toLowerCase().includes("onion") ||
-        item.vegetableType.toLowerCase().includes("tomato") ||
-        item.vegetableType.toLowerCase().includes("potato") ||
-        item.vegetableType.toLowerCase().includes("pepper") ||
-        item.vegetableType.toLowerCase().includes("cabbage") ||
-        item.vegetableType.toLowerCase().includes("carrot") ||
-        item.vegetableType.toLowerCase().includes("cucumber");
-    }
-
     // Family match
     const matchesFamily = selectedFamily === "All Families" || item.family === selectedFamily;
 
@@ -114,7 +80,7 @@ export const EncyclopediaView: React.FC<EncyclopediaViewProps> = ({
       item.keyVisualSign.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.typicalSymptoms.some((s) => s.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    return matchesCategory && matchesFamily && matchesCrop && matchesPathogen && matchesSearch;
+    return matchesFamily && matchesCrop && matchesPathogen && matchesSearch;
   });
 
   const toggleExpand = (id: string) => {
@@ -147,56 +113,31 @@ export const EncyclopediaView: React.FC<EncyclopediaViewProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <BookOpen className="w-3.5 h-3.5" /> 10+ Vegetable &amp; Fruit Disease Encyclopedia
+              <BookOpen className="w-3.5 h-3.5" /> Vegetable Disease &amp; Pest Encyclopedia
             </span>
           </div>
           <div className="text-xs text-slate-400 flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <strong>{filteredDiseases.length}</strong> of {ENCYCLOPEDIA_DISEASES.length} Comprehensive Disease Profiles
+            <strong>{filteredDiseases.length}</strong> of {ENCYCLOPEDIA_DISEASES.length} Comprehensive Vegetable Profiles
           </div>
         </div>
 
         <h1 className="text-xl sm:text-2xl font-bold text-white mt-2">
-          Vegetable &amp; Fruit Disease &amp; Rot Guide
+          Vegetable Disease, Blight &amp; Rot Guide
         </h1>
         <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-3xl leading-relaxed">
-          Complete botanical descriptions, pathogen identification, environmental triggers, organic bio-treatments, chemical management, storage guidelines, and edibility safety assessments for 10+ common vegetables and fruits.
+          Complete botanical descriptions, pathogen identification, environmental triggers, organic bio-treatments, chemical management, storage guidelines, and edibility safety assessments for all common farm and garden vegetables.
         </p>
-
-        {/* Category Tabs (All / Vegetables / Fruits) */}
-        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-emerald-900/40">
-          {CROP_CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => {
-                setSelectedCategory(cat);
-                setSelectedCrop("All");
-              }}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                selectedCategory === cat
-                  ? "bg-emerald-600 text-white shadow-sm shadow-emerald-950/40"
-                  : "bg-[#0d130e] text-slate-400 hover:text-white border border-emerald-900/40"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Quick Crop Selector Chips */}
       <div className="bg-[#141d16] border border-emerald-900/30 rounded-2xl p-4 sm:p-5 space-y-4 shadow-sm">
         <div>
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
-            Select Crop to Inspect:
+            Select Vegetable to Inspect:
           </label>
           <div className="flex flex-wrap gap-2">
-            {POPULAR_CROPS.filter(
-              (c) =>
-                selectedCategory === "All Crops" ||
-                c.name === "All" ||
-                c.type === selectedCategory
-            ).map((crop) => (
+            {POPULAR_CROPS.map((crop) => (
               <button
                 key={crop.name}
                 onClick={() => {
@@ -271,7 +212,6 @@ export const EncyclopediaView: React.FC<EncyclopediaViewProps> = ({
               onClick={() => {
                 setSearchTerm("");
                 setSelectedCrop("All");
-                setSelectedCategory("All Crops");
                 setSelectedFamily("All Families");
                 setSelectedPathogen("All");
               }}

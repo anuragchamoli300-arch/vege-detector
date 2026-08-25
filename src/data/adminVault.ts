@@ -1,4 +1,4 @@
-import { AdminUserAccount, AdminAuditLog, UserProfile, UserRole } from "../types";
+import { AdminUserAccount, AdminAuditLog, UserProfile } from "../types";
 
 export const INITIAL_ADMIN_USERS: AdminUserAccount[] = [
   {
@@ -6,7 +6,7 @@ export const INITIAL_ADMIN_USERS: AdminUserAccount[] = [
     name: "System Administrator",
     email: "admin@cropvision.local",
     role: "Administrator",
-    passwordDisplay: "cropadmin2026",
+    passwordDisplay: "••••••••",
     status: "Active",
     scansCount: 42,
     createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
@@ -18,7 +18,7 @@ export const INITIAL_ADMIN_USERS: AdminUserAccount[] = [
     name: "Sarah Green",
     email: "sarah.green@garden.local",
     role: "Home Gardener",
-    passwordDisplay: "greenSprout#88",
+    passwordDisplay: "••••••••",
     status: "Active",
     scansCount: 14,
     createdAt: new Date(Date.now() - 86400000 * 12).toISOString(),
@@ -30,7 +30,7 @@ export const INITIAL_ADMIN_USERS: AdminUserAccount[] = [
     name: "David Miller",
     email: "david@valleyfarms.local",
     role: "Organic Farmer",
-    passwordDisplay: "valleyHarvest$2026",
+    passwordDisplay: "••••••••",
     status: "Active",
     scansCount: 38,
     createdAt: new Date(Date.now() - 86400000 * 8).toISOString(),
@@ -42,7 +42,7 @@ export const INITIAL_ADMIN_USERS: AdminUserAccount[] = [
     name: "Elena Rostova",
     email: "elena@producekitchen.org",
     role: "Grocer / Kitchen",
-    passwordDisplay: "safeStorage!99",
+    passwordDisplay: "••••••••",
     status: "Active",
     scansCount: 7,
     createdAt: new Date(Date.now() - 86400000 * 4).toISOString(),
@@ -56,7 +56,7 @@ export const INITIAL_AUDIT_LOGS: AdminAuditLog[] = [
     id: "LOG-9001",
     timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
     event: "ADMIN_LOGIN",
-    details: "Administrator session authenticated from secure admin portal",
+    details: "Administrator session authenticated from security console",
     userEmail: "admin@cropvision.local",
     ipOrDevice: "192.168.1.104 (Local Secure Gateway)",
   },
@@ -112,7 +112,12 @@ export const loadAdminUsers = (): AdminUserAccount[] => {
   try {
     const raw = localStorage.getItem(ADMIN_STORAGE_KEY);
     if (raw) {
-      return JSON.parse(raw);
+      const parsed: AdminUserAccount[] = JSON.parse(raw);
+      // Ensure all loaded passwords are securely masked
+      return parsed.map((u) => ({
+        ...u,
+        passwordDisplay: "••••••••",
+      }));
     }
   } catch (e) {
     console.error("Failed to load admin user vault:", e);
@@ -122,7 +127,12 @@ export const loadAdminUsers = (): AdminUserAccount[] => {
 
 export const saveAdminUsers = (users: AdminUserAccount[]): void => {
   try {
-    localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(users));
+    // Sanitize before saving to localStorage
+    const safeUsers = users.map((u) => ({
+      ...u,
+      passwordDisplay: "••••••••",
+    }));
+    localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(safeUsers));
   } catch (e) {
     console.error("Failed to save admin user vault:", e);
   }
@@ -165,7 +175,8 @@ export const appendAuditLog = (
 
 export const registerUserInVault = (
   user: UserProfile,
-  rawPassword?: string
+  _rawPassword?: string,
+  loginMethod: string = "Direct Login"
 ): void => {
   try {
     const users = loadAdminUsers();
@@ -174,46 +185,101 @@ export const registerUserInVault = (
     );
 
     const now = new Date().toISOString();
-    const passwordToStore = rawPassword || "SecureUserPass_auto";
+    const userDevice =
+      typeof navigator !== "undefined"
+        ? navigator.userAgent.includes("Mobile")
+          ? "Mobile Device / " + (navigator.userAgent.includes("iPhone") ? "iOS Safari" : "Android Chrome")
+          : "Desktop Workstation / Chrome/Edge"
+        : "Client Web Browser";
 
     if (existingIndex >= 0) {
-      // Update existing record
+      const prev = users[existingIndex];
+      const prevHistory = Array.isArray(prev.loginHistory) ? prev.loginHistory : [];
+      const updatedHistory = [
+        {
+          timestamp: now,
+          ipOrDevice: userDevice,
+          event: "Sign In / Session Authenticated",
+          method: loginMethod,
+        },
+        ...prevHistory.slice(0, 19),
+      ];
+
       users[existingIndex] = {
-        ...users[existingIndex],
-        name: user.name,
-        role: user.role,
+        ...prev,
+        name: user.name || prev.name,
+        role: user.role || prev.role,
         lastLogin: now,
-        passwordDisplay: rawPassword || users[existingIndex].passwordDisplay,
+        savedAt: now,
+        savedToAdminPanel: true,
+        loginMethod: loginMethod,
+        loginCount: (prev.loginCount || 1) + 1,
+        passwordDisplay: "••••••••",
+        deviceType: userDevice,
+        loginHistory: updatedHistory,
       };
+
       appendAuditLog(
         "USER_LOGIN",
-        `User ${user.name} logged into system`,
-        user.email
+        `User authenticated: "${user.name}" (${user.email}) via ${loginMethod}`,
+        user.email,
+        userDevice
       );
     } else {
-      // Create new record
       const newAdminUser: AdminUserAccount = {
         id: `USR-${Math.floor(10000 + Math.random() * 90000)}`,
         name: user.name,
         email: user.email,
         role: user.role,
-        passwordDisplay: passwordToStore,
+        passwordDisplay: "••••••••",
         status: "Active",
         scansCount: 0,
         createdAt: now,
         lastLogin: now,
-        deviceType: navigator.userAgent.includes("Mobile")
-          ? "Mobile Device"
-          : "Desktop Browser",
+        savedAt: now,
+        savedToAdminPanel: true,
+        loginMethod: loginMethod,
+        loginCount: 1,
+        deviceType: userDevice,
+        loginHistory: [
+          {
+            timestamp: now,
+            ipOrDevice: userDevice,
+            event: "New Account Registration & Authentication",
+            method: loginMethod,
+          },
+        ],
       };
       users.unshift(newAdminUser);
       appendAuditLog(
         "USER_SIGNUP",
-        `New account registered [ID: ${newAdminUser.id}] with role ${user.role}`,
-        user.email
+        `New account registered [ID: ${newAdminUser.id}] (${user.email})`,
+        user.email,
+        userDevice
       );
     }
     saveAdminUsers(users);
+
+    // Sync to backend securely (Backend will hash password)
+    fetch("/api/auth/save-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user,
+        loginMethod,
+      }),
+    }).catch((err) => {
+      console.warn("Backend auth sync notice:", err);
+    });
+
+    // Broadcast event across components and tabs
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("cropvision:login_saved", {
+          detail: { email: user.email, name: user.name, timestamp: now },
+        })
+      );
+    }
   } catch (e) {
     console.error("Failed to register in vault:", e);
   }

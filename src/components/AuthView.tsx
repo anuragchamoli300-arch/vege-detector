@@ -76,22 +76,24 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess, onOpenAdminP
         createdAt: new Date().toISOString(),
       };
 
+      const loginMethod = isSignUp ? "New Account Registration" : "Email & Password Sign-In";
+
       // Securely store credentials in the Admin Vault
-      registerUserInVault(user, password);
+      registerUserInVault(user, password, loginMethod);
 
       // Async sync with server endpoint if available
       try {
         fetch("/api/auth/save-user", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user, password }),
+          body: JSON.stringify({ user, password, loginMethod }),
         }).catch((err) => console.log("Server sync fallback:", err));
       } catch (err) {
         console.error(err);
       }
 
       onLoginSuccess(user);
-    }, 500);
+    }, 450);
   };
 
   const handleQuickDemo = (demoType: "gardener" | "farmer" | "admin" | "guest") => {
@@ -100,6 +102,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess, onOpenAdminP
       setIsLoading(false);
       let user: UserProfile;
       let pass = "demoPass_2026";
+      let method = "1-Click Quick Demo";
 
       if (demoType === "admin") {
         user = {
@@ -112,6 +115,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess, onOpenAdminP
           createdAt: new Date().toISOString(),
         };
         pass = "cropadmin2026";
+        method = "Admin Console 1-Click Login";
       } else if (demoType === "gardener") {
         user = {
           id: "USR-00204",
@@ -123,6 +127,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess, onOpenAdminP
           createdAt: new Date().toISOString(),
         };
         pass = "greenSprout#88";
+        method = "1-Click Gardener Demo Login";
       } else if (demoType === "farmer") {
         user = {
           id: "USR-00318",
@@ -134,6 +139,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess, onOpenAdminP
           createdAt: new Date().toISOString(),
         };
         pass = "valleyHarvest$2026";
+        method = "1-Click Farmer Demo Login";
       } else {
         user = {
           id: `USR-${Math.floor(10000 + Math.random() * 90000)}`,
@@ -145,14 +151,15 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess, onOpenAdminP
           createdAt: new Date().toISOString(),
         };
         pass = "guestSecurePass";
+        method = "Guest Mode Login";
       }
 
-      registerUserInVault(user, pass);
+      registerUserInVault(user, pass, method);
       try {
         fetch("/api/auth/save-user", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user, password: pass }),
+          body: JSON.stringify({ user, password: pass, loginMethod: method }),
         }).catch(() => {});
       } catch {}
 
@@ -454,20 +461,21 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess, onOpenAdminP
               </div>
             )}
 
-            {/* Remember Me & Privacy note */}
-            <div className="flex items-center justify-between pt-1">
+            {/* Remember Me & Admin Panel Save note */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
               <label className="flex items-center gap-2 cursor-pointer select-none">
                 <input
+                  id="auth-checkbox-save-login"
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="rounded bg-[#0d130e] border-emerald-900/40 text-emerald-600 focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5"
                 />
-                <span className="text-xs text-slate-400">Remember credentials</span>
+                <span className="text-xs text-slate-300 font-medium">Save login to Admin Panel &amp; Vault</span>
               </label>
-              <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                <Lock className="w-3 h-3 text-emerald-500/70" />
-                <span>Admin Vault Protected</span>
+              <span className="text-[11px] text-amber-400/90 flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                <span>Auto-Saved to Admin Security Panel</span>
               </span>
             </div>
 
